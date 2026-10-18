@@ -3,7 +3,8 @@ import { annualize, payDatesBetween, toMonthly } from './income';
 import { allocateByPriority, safeToSpend, summarizePlan, type EngineInputs } from './plan';
 import { installmentPayment, project, expandPurchase } from './projection';
 import { analyzeGoal } from './goals';
-import { compareScenario } from './scenario';
+import { bestOption, compareOptions, compareScenario } from './scenario';
+import { project as projectFn } from './projection';
 import { analyzeMatch, matchPercent } from './match';
 import { applyWeeklyRewards, evaluateWeeksSince, streakBonus, buyItem } from '../garden/rules';
 import { GARDEN_ITEMS } from '../garden/items';
@@ -160,6 +161,19 @@ describe('purchase impact', () => {
     const cmp = compareScenario(inputs(), [purchase({ price: 6500, recurrence: { interval: 'monthly', occurrences: null } })], { horizon: 12 });
     expect(cmp.monthlyRecurringCost).toBe(6500);
     expect(cmp.savingsCapacity.after).toBe(cmp.savingsCapacity.before - 6500);
+  });
+});
+
+describe('comparing options', () => {
+  it('evaluates each option alone, even when not included in the combined scenario', () => {
+    const flagship = purchase({ id: 'a', customName: 'Flagship', price: 119900 });
+    const midrange = purchase({ id: 'b', customName: 'Midrange', price: 49900, included: false });
+    const baseline = projectFn(inputs(), { scenarioId: 'baseline' });
+    const [a, b] = compareOptions(inputs(), [flagship, midrange], 24, baseline);
+    const aloneB = compareScenario(inputs(), [{ ...midrange, included: true }], { horizon: 24 });
+    expect(b.cmp.goalImpacts).toEqual(aloneB.goalImpacts);
+    expect(b.totalDelayDays).toBeLessThan(a.totalDelayDays);
+    expect(bestOption([a, b])!.item.id).toBe('b');
   });
 });
 

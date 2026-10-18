@@ -271,3 +271,30 @@ export function goalMath(inp: EngineInputs, cmp: ScenarioComparison, goalId: str
     protect: inp.prefs.protectCashBuffer,
   };
 }
+
+/* ------------------------------------------------------------------ */
+/* Side-by-side options: each purchase evaluated alone against the same baseline. */
+
+export interface OptionResult {
+  item: PurchaseScenario;
+  cmp: ScenarioComparison;
+  /** Sum of positive goal delays in days (goals pushed beyond the projection are counted separately). */
+  totalDelayDays: number;
+  goalsPushedBeyond: number;
+}
+
+export function compareOptions(inp: EngineInputs, items: PurchaseScenario[], horizon: number, baseline: ProjectionResult): OptionResult[] {
+  return items.map((item) => {
+    const cmp = compareScenario(inp, [{ ...item, included: true }], { horizon, baseline });
+    return {
+      item, cmp,
+      totalDelayDays: sum(cmp.goalImpacts.map((g) => Math.max(0, g.delayDays ?? 0))),
+      goalsPushedBeyond: cmp.goalImpacts.filter((g) => g.kind === 'pushed_beyond').length,
+    };
+  });
+}
+
+/** Lower is better: goals pushed past the projection, then total delay, then cost. */
+export function bestOption(options: OptionResult[]): OptionResult | null {
+  return [...options].sort((a, b) => a.goalsPushedBeyond - b.goalsPushedBeyond || a.totalDelayDays - b.totalDelayDays || a.cmp.totalCostInHorizon - b.cmp.totalCostInHorizon)[0] ?? null;
+}

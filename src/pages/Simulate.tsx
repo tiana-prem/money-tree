@@ -6,7 +6,8 @@ import { Callout, Card, ConfirmDialog, KV, MathToggle, Modal, MoneyInput, Segmen
 import { ProductImage } from '../components/ProductImage';
 import { PRODUCTS, PRODUCT_CATEGORIES } from '../data/products';
 import type { ProductCategory, PurchaseScenario, RecurrenceInterval } from '../engine/types';
-import { buildAlternatives, goalMath, type GoalImpact, type ScenarioComparison } from '../engine/scenario';
+import { buildAlternatives, compareOptions, goalMath, type GoalImpact, type ScenarioComparison } from '../engine/scenario';
+import { CompareOptions } from '../components/CompareOptions';
 import { installmentPayment, totalPurchaseCost } from '../engine/projection';
 import { explainPurchase } from '../explain/explain';
 import { addDays, describeDays, diffDays, fmtDate, fmtMonth, isValidISO } from '../lib/dates';
@@ -34,6 +35,7 @@ export function SimulatePage() {
   );
   const explanation = cmp ? explainPurchase(cmp, items, d.goals) : null;
   const toApply = drafts.filter((i) => i.included);
+  const options = useMemo(() => (drafts.length >= 2 ? compareOptions(x.inputs, drafts, horizon, x.baseline) : []), [x, drafts, horizon]);
 
   return (
     <div className="page">
@@ -70,7 +72,7 @@ export function SimulatePage() {
 
           <div className="grid g-main">
             {/* Scenario controls */}
-            <Card title="Scenario" subtitle={`${drafts.length} item${drafts.length > 1 ? 's' : ''} · ${toApply.length} included`}>
+            <Card title="Scenario" subtitle={drafts.length > 1 ? 'Switched on = bought together. Options are compared one at a time below.' : undefined}>
               <div className="list">
                 {items.map((i) => (
                   <div key={i.id} className="list-item" style={{ cursor: 'pointer', background: i.id === selected.id ? 'var(--sage-soft)' : undefined, borderRadius: 10, paddingLeft: 8, paddingRight: 8 }}
@@ -99,6 +101,14 @@ export function SimulatePage() {
             </Card>
           </div>
 
+          {options.length >= 2 && (
+            <Card title="Compare options" subtitle="Each option on its own, side by side">
+              <CompareOptions options={options} goals={d.goals} horizon={horizon}
+                onChoose={(id) => { st.chooseScenarioItem(id); st.toast('Chosen. The rest stay here to compare.', 'info'); }}
+                onRemove={(id) => st.removeScenarioItem(id)} />
+            </Card>
+          )}
+
           <Card title="What it does to your goals" subtitle="When each goal finishes, with and without the purchase">
             {d.goals.length === 0 ? <div className="small muted">Add a goal to see how purchases move it.</div> : cmp.goalImpacts.map((g) => <ImpactRow key={g.goalId} g={g} cmp={cmp} />)}
           </Card>
@@ -123,7 +133,9 @@ export function SimulatePage() {
                       {a.vsCurrent && a.vsCurrent.days !== 0 && <span className={`badge ${a.vsCurrent.days < 0 ? 'badge-success' : 'badge-warning'}`}>{a.vsCurrent.goalName} {describeDays(a.vsCurrent.days)} {a.vsCurrent.days < 0 ? 'sooner' : 'later'} than current choice</span>}
                       <div className="tiny muted">Cost within {horizon} months: {money(a.costInHorizon)}{a.comparison.newShortfallPeriods.length ? ' · creates a cash shortfall' : ''}</div>
                       <div style={{ marginTop: 'auto' }}>
-                        {a.id === 'reduce'
+                        {a.id === 'cheaper' && selected.productId && PRODUCTS.find((p) => p.id === selected.productId)?.alternativeId
+                          ? <button className="btn btn-soft btn-sm btn-block" onClick={() => { const alt = PRODUCTS.find((p) => p.id === PRODUCTS.find((pp) => pp.id === selected.productId)!.alternativeId)!; if (drafts.some((i) => i.productId === alt.id)) st.toast(`${alt.name} is already in your comparison.`, 'info'); else st.addScenarioFromProduct(alt, { compareTo: selected }); }}>Compare side by side</button>
+                          : a.id === 'reduce'
                           ? <div className="tiny faint">Budget changes only happen if you make them under Edit my money.</div>
                           : <button className="btn btn-soft btn-sm btn-block" onClick={() => { const changed = a.items.find((i) => i.id === selected.id)!; st.updateScenarioItem(selected.id, { price: changed.price, plannedDate: changed.plannedDate, payment: changed.payment, recurrence: changed.recurrence, customName: changed.customName, productId: changed.productId }); st.toast('Simulation updated with this alternative.', 'info'); }}>Try this in my simulation</button>}
                       </div>
@@ -192,6 +204,7 @@ export function SimulatePage() {
 
 function ItemControls({ item }: { item: PurchaseScenario }) {
   const x = useDerived();
+  const drafts = useData().scenario.items.filter((i) => i.scenarioStatus === 'draft');
   const st = useStore();
   const upd = (patch: Partial<PurchaseScenario>) => st.updateScenarioItem(item.id, patch);
   const offset = Math.max(0, diffDays(item.plannedDate, x.today));
@@ -245,7 +258,7 @@ function ItemControls({ item }: { item: PurchaseScenario }) {
           <div className="full small muted">12-month cost {money(totalPurchaseCost(item, 12))} · reduces monthly savings capacity while active.</div>
         </div>
       )}
-      {cheaper && <button className="btn btn-secondary btn-sm" onClick={() => st.addScenarioFromProduct(cheaper)}><TrendingDown size={14} /> Compare with {cheaper.name} ({money(cheaper.price)})</button>}
+      {cheaper && !drafts.some((i) => i.productId === cheaper.id) && <button className="btn btn-secondary btn-sm" onClick={() => st.addScenarioFromProduct(cheaper, { compareTo: item })}><TrendingDown size={14} /> Compare with {cheaper.name} ({money(cheaper.price)})</button>}
     </div>
   );
 }

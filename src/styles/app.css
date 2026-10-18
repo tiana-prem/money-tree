@@ -440,3 +440,7 @@ details > summary::-webkit-details-marker { display: none; }
 .lb-streak { display: inline-flex; align-items: center; gap: 3px; font-size: 13px; font-weight: 650; color: var(--text-3); font-variant-numeric: tabular-nums; }
 .lb-streak.lit { color: #ea580c; }
 .lb-points { text-align: right; font-weight: 650; }
+
+.compare-table td.win { background: var(--success-soft); color: var(--success); font-weight: 650; }
+.compare-table td.win .faint { color: var(--success); opacity: 0.8; }
+.compare-table th { vertical-align: bottom; min-width: 120px; }

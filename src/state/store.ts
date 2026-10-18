@@ -48,7 +48,9 @@ interface Store {
   deleteGoal: (id: string) => void;
   moveGoal: (id: string, dir: -1 | 1) => void;
 
-  addScenarioFromProduct: (p: Product) => void;
+  /** With `compareTo`, the product is added as an option to compare (same date, not added to the combined scenario). */
+  addScenarioFromProduct: (p: Product, opts?: { compareTo?: PurchaseScenario }) => void;
+  chooseScenarioItem: (id: string) => void;
   addCustomScenario: (s: Omit<PurchaseScenario, 'id' | 'baselineId' | 'scenarioStatus' | 'createdAt' | 'included'>) => void;
   updateScenarioItem: (id: string, patch: Partial<PurchaseScenario>) => void;
   removeScenarioItem: (id: string) => void;
@@ -176,22 +178,25 @@ export const useStore = create<Store>()(
           return { ...d, goals: d.goals.map((g) => ({ ...g, priority: prio.get(g.id)! })) };
         }),
 
-        addScenarioFromProduct: (p) => {
+        addScenarioFromProduct: (p, opts) => {
           const id = newId('sc');
+          const base = opts?.compareTo;
           mutate((d) => ({
             ...d,
             scenario: {
               items: [...d.scenario.items, {
-                id, productId: p.id, customName: p.name, category: p.category, price: p.price, plannedDate: effectiveToday(d),
-                recurrence: p.recurring ?? null, payment: { type: 'full' }, included: true, description: p.description,
+                id, productId: p.id, customName: p.name, category: p.category, price: p.price, plannedDate: base?.plannedDate ?? effectiveToday(d),
+                recurrence: p.recurring ?? null, payment: { type: 'full' }, included: !base, description: p.description,
                 baselineId: 'baseline', scenarioStatus: 'draft', createdAt: effectiveToday(d),
               }],
-              selectedId: id,
+              selectedId: base ? d.scenario.selectedId : id,
             },
             activity: logEntry(d, { kind: 'simulation', title: `Simulated: ${p.name}`, detail: 'Added to a what-if scenario. Nothing was purchased.', amount: p.price }),
           }));
-          get().toast(`${p.name} added to your simulation.`);
+          get().toast(opts?.compareTo ? `${p.name} added as an option to compare.` : `${p.name} added to your simulation.`);
         },
+        /** Make one item the only included purchase (used when picking a winner from a comparison). */
+        chooseScenarioItem: (id) => mutate((d) => ({ ...d, scenario: { selectedId: id, items: d.scenario.items.map((i) => (i.scenarioStatus === 'draft' ? { ...i, included: i.id === id } : i)) } })),
         addCustomScenario: (s) => {
           const id = newId('sc');
           mutate((d) => ({
