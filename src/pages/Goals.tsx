@@ -5,6 +5,7 @@ import { useStore } from '../state/store';
 import { useData, useDerived } from '../state/hooks';
 import { Callout, Card, ChartTooltip, ConfirmDialog, KV, MathToggle, Modal, MoneyInput, Progress, Segmented } from '../components/ui';
 import { GOAL_CATEGORY_LABEL, GOAL_ICON, GoalRow, trackBadge } from '../components/finance';
+import { ProjectionChart } from '../components/charts';
 import type { FinancialGoal, GoalCategory } from '../engine/types';
 import { AVG_DAYS_PER_MONTH, addDays, describeDays, diffDays, fmtDate, isValidISO, monthsBetween } from '../lib/dates';
 import { money, moneyShort } from '../lib/money';
@@ -29,11 +30,9 @@ export function GoalsPage() {
         <button className="btn btn-primary" onClick={() => setAdding(true)}><Plus size={17} /> Add goal</button>
       </div>
 
-      <div className="grid g-4">
-        <Stat label="Saved toward goals" value={money(d.goals.reduce((a, g) => a + g.currentSavedAmount, 0))} />
-        <Stat label="Still to save" value={money(d.goals.reduce((a, g) => a + x.goalAnalyses[g.id].remaining, 0))} />
-        <Stat label="Contributions / month" value={money(x.summary.plannedSavings)} />
-        <Stat label="Savings capacity / month" value={money(x.summary.savingsCapacity)} sub={x.summary.overAllocated ? `${money(-x.summary.unallocated)} over-allocated` : `${money(x.summary.unallocated)} unassigned`} neg={x.summary.overAllocated} />
+      <div className="grid g-2">
+        <Stat label="Saved so far" value={money(d.goals.reduce((a, g) => a + g.currentSavedAmount, 0))} sub={`${money(d.goals.reduce((a, g) => a + x.goalAnalyses[g.id].remaining, 0))} still to go`} />
+        <Stat label="Going to goals each month" value={money(x.summary.plannedSavings)} sub={x.summary.overAllocated ? `${money(-x.summary.unallocated)} more than your budget allows` : `${money(x.summary.unallocated)} more available`} neg={x.summary.overAllocated} />
       </div>
 
       {x.summary.overAllocated && (
@@ -67,7 +66,44 @@ export function GoalsPage() {
           </div>
         )}
       </Card>
+      {goals.length > 0 && <GoalTimeline />}
       <GoalForm open={adding} onClose={() => setAdding(false)} />
+    </div>
+  );
+}
+
+/** When each goal finishes, and how savings, checking and debt move over time. */
+function GoalTimeline() {
+  const d = useData();
+  const x = useDerived();
+  const st = useStore();
+  const horizon = d.profile.planningPreferences.horizonMonths;
+  const items = [
+    ...x.sortedGoalIds.map((id) => {
+      const g = d.goals.find((gg) => gg.id === id)!;
+      const a = x.goalAnalyses[id];
+      return { date: a.projectedCompletionDate, title: `${g.name} reaches ${money(g.targetAmount)}`, sub: g.targetDate ? `Target ${fmtDate(g.targetDate)}` : 'No target date', done: a.track === 'complete', late: a.track === 'behind' };
+    }),
+    ...d.accounts.filter((a) => a.accountRole === 'liability').map((a) => ({ date: x.baseline.debtPayoffDates[a.id], title: `${a.name} paid off`, sub: `${money(a.balance)} left at ${((a.apr ?? 0) * 100).toFixed(1)}%`, done: false, late: false })),
+  ].sort((a, b) => (a.date ?? '9999').localeCompare(b.date ?? '9999'));
+  return (
+    <div className="grid g-main mt-16">
+      <Card title="Where you're headed" subtitle="If you stick to your plan. No investment returns assumed."
+        action={<Segmented label="Time horizon" value={horizon} onChange={(v) => st.setPrefs({ horizonMonths: v })} options={[{ value: 12, label: '1 yr' }, { value: 24, label: '2 yr' }]} />}>
+        <ProjectionChart baseline={x.baseline} scenario={x.comparison?.scenario} months={horizon} buffer={d.plan.cashBuffer} height={260} />
+        {x.comparison && <div className="small muted mt-8">Dashed lines include what you're testing in Simulate.</div>}
+      </Card>
+      <Card title="Milestones">
+        <div className="timeline">
+          {items.map((m, i) => (
+            <div className="tl-item" key={i}>
+              <span className={`tl-dot ${m.done ? 'done' : m.late ? 'warn' : !m.date ? 'muted' : ''}`} />
+              <div className="row-between"><span className="strong">{m.title}</span><span className="small num strong">{m.date ? fmtDate(m.date) : '5+ years'}</span></div>
+              <div className="small muted">{m.sub}{m.late ? ' · behind' : ''}</div>
+            </div>
+          ))}
+        </div>
+      </Card>
     </div>
   );
 }
@@ -128,16 +164,23 @@ export function GoalForm({ open, onClose, goal }: { open: boolean; onClose: () =
         <div><MoneyInput label="Target amount" value={f.targetAmount} onChange={(v) => set('targetAmount', v)} />{touched && errors.targetAmount && <span className="error small" style={{ color: 'var(--negative)' }}>{errors.targetAmount}</span>}</div>
         <MoneyInput label="Already saved" value={f.currentSavedAmount} onChange={(v) => set('currentSavedAmount', v)} />
         <div className="field"><label htmlFor="g-date">Target date (optional)</label><input id="g-date" type="date" className="input" value={f.targetDate} min={addDays(x.today, 1)} onChange={(e) => set('targetDate', e.target.value)} aria-invalid={!!errors.targetDate} />{errors.targetDate && <span className="error">{errors.targetDate}</span>}</div>
-        <div className="field"><span className="label">Contribution</span>
-          <div className="row"><div style={{ flex: 1 }}><MoneyInput value={f.contributionAmount} onChange={(v) => set('contributionAmount', v)} /></div>
-            <Segmented label="Contribution frequency" value={f.contributionFrequency} onChange={(v) => set('contributionFrequency', v)} options={[{ value: 'monthly', label: '/ month' }, { value: 'per_paycheck', label: '/ paycheck' }]} /></div>
+        <div className="field"><span className="label">Save each {f.contributionFrequency === 'per_paycheck' ? 'paycheck' : 'month'}</span>
+          <MoneyInput value={f.contributionAmount} onChange={(v) => set('contributionAmount', v)} />
         </div>
-        <div className="field"><label htmlFor="g-prio">Priority</label>
-          <select id="g-prio" className="select" value={f.priority} onChange={(e) => set('priority', Number(e.target.value))}>
-            {Array.from({ length: Math.max(d.goals.length + (goal ? 0 : 1), 1) }, (_, i) => i + 1).map((p) => <option key={p} value={p}>{p === 1 ? '1 — highest' : p}</option>)}
-          </select>
-        </div>
-        <div className="field full"><label htmlFor="g-notes">Notes (optional)</label><textarea id="g-notes" className="textarea" maxLength={200} value={f.notes} onChange={(e) => set('notes', e.target.value)} /></div>
+        <details className="full">
+          <summary className="link-btn small">More options</summary>
+          <div className="form-grid mt-12">
+            <div className="field"><span className="label">Save per</span>
+              <Segmented label="Contribution frequency" value={f.contributionFrequency} onChange={(v) => set('contributionFrequency', v)} options={[{ value: 'monthly', label: 'Month' }, { value: 'per_paycheck', label: 'Paycheck' }]} />
+            </div>
+            <div className="field"><label htmlFor="g-prio">Priority</label>
+              <select id="g-prio" className="select" value={f.priority} onChange={(e) => set('priority', Number(e.target.value))}>
+                {Array.from({ length: Math.max(d.goals.length + (goal ? 0 : 1), 1) }, (_, i) => i + 1).map((p) => <option key={p} value={p}>{p === 1 ? '1 — highest' : p}</option>)}
+              </select>
+            </div>
+            <div className="field full"><label htmlFor="g-notes">Notes</label><textarea id="g-notes" className="textarea" maxLength={200} value={f.notes} onChange={(e) => set('notes', e.target.value)} /></div>
+          </div>
+        </details>
       </div>
 
       {f.targetAmount > 0 && (

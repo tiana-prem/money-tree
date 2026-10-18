@@ -1,5 +1,5 @@
 import type {
-  BudgetLine, BudgetPlan, FinancialAccount, FinancialGoal, ForecastSnapshot, GardenState, ISODate, Paystub, Transaction, UserProfile,
+  BudgetLine, BudgetPlan, FinancialAccount, FinancialGoal, GardenState, ISODate, Paystub, Transaction, UserProfile,
 } from '../engine/types';
 import type { AppData } from '../state/schema';
 import { addDays, addMonths, daysInMonth, endOfMonth, monthKey, parseISO, startOfMonth, startOfWeek, toISO } from '../lib/dates';
@@ -161,23 +161,6 @@ function goalHistory(g: FinancialGoal, txns: Transaction[], asOf: ISODate): Fina
   return [...months.map((d) => ({ date: d, balance: g.currentSavedAmount - transfersAfter(d) })), { date: asOf, balance: g.currentSavedAmount }];
 }
 
-function forecastSnapshots(asOf: ISODate): ForecastSnapshot[] {
-  const out: ForecastSnapshot[] = [];
-  for (let m = 6; m >= 1; m--) {
-    const mk = monthKey(addMonths(startOfMonth(asOf), -m));
-    // The plan was updated three months ago: groceries were planned at $350 before that.
-    const lines = [...ESSENTIALS, ...DISCRETIONARY].map((l) => (l.id === 'groceries' && m > 3 ? { ...l, amount: 35000 } : l));
-    out.push({
-      monthKey: mk,
-      predictedSpending: sum(lines.map((l) => l.amount)),
-      predictedSavings: 90000,
-      predictedByLine: Object.fromEntries(lines.map((l) => [l.id, l.amount])),
-      isSynthetic: true,
-    });
-  }
-  return out;
-}
-
 export function emptyGarden(asOf: ISODate): GardenState {
   return {
     pointsBalance: 0, currentStreak: 0, longestStreak: 0, successfulWeeks: 0,
@@ -250,14 +233,11 @@ export function createDemoData(asOf: ISODate): AppData {
     version: 1, asOf, profile, paystub: stub, accounts, transactions, plan, goals,
     scenario: { items: [], selectedId: null },
     recommendationFeedback: {},
-    forecastSnapshots: forecastSnapshots(asOf),
     garden,
     activity: [
-      { id: 'a-seed-1', date: addDays(asOf, -9), kind: 'plan', title: 'Groceries budget reviewed', detail: 'Plan updated three months ago from $350 to $380 per month.' },
       { id: 'a-seed-2', date: addDays(asOf, -2), kind: 'account', title: 'Simulated accounts refreshed', detail: 'Demo balances as of today. No real accounts are connected.' },
     ],
     connections: { payroll: true, bank: true },
-    auditNotApplicable: [],
   };
 }
 
@@ -285,9 +265,8 @@ export function createManualData(asOf: ISODate, input: {
     version: 1, asOf,
     profile: { id: 'user-manual', displayName: input.name.trim(), onboardingCompleted: true, payFrequency: input.payFrequency, currency: 'USD', planningPreferences: defaultPreferences(), dataSource: 'manual', createdAt: asOf },
     paystub: null, accounts, transactions: [], plan, goals: [],
-    scenario: { items: [], selectedId: null }, recommendationFeedback: {}, forecastSnapshots: [],
+    scenario: { items: [], selectedId: null }, recommendationFeedback: {},
     garden: emptyGarden(asOf), activity: [{ id: 'a-manual', date: asOf, kind: 'plan', title: 'Plan created from your entries' }],
     connections: { payroll: false, bank: false },
-    auditNotApplicable: [],
   };
 }

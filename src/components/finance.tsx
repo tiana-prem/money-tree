@@ -1,10 +1,8 @@
-import { Car, Check, GraduationCap, Home as HomeIcon, Minus, Palmtree, PiggyBank, ShieldCheck, Sparkles, Umbrella } from 'lucide-react';
+import { Car, GraduationCap, Home as HomeIcon, Palmtree, PiggyBank, Sparkles, Umbrella } from 'lucide-react';
 import type { FinancialGoal, GoalCategory } from '../engine/types';
 import type { SafeToSpend } from '../engine/plan';
 import type { GoalAnalysis } from '../engine/goals';
 import { TRACK_LABEL } from '../engine/goals';
-import type { AuditItem } from '../insights/audit';
-import { useStore } from '../state/store';
 import { KV, MathToggle, Progress } from './ui';
 import { fmtDate } from '../lib/dates';
 import { money } from '../lib/money';
@@ -89,44 +87,3 @@ Cash:   ${money(s.checking)} + ${money(s.incomeExpected)} − ${money(s.essentia
   );
 }
 
-export function AuditList({ items, compact }: { items: AuditItem[]; compact?: boolean }) {
-  const toggle = useStore((s) => s.toggleAuditNA);
-  return (
-    <div>
-      {items.map((it) => (
-        <div className="audit-item" key={it.id}>
-          <div className={`audit-status ${it.status}`} aria-label={it.status}>
-            {it.status === 'done' ? <Check size={14} strokeWidth={3} /> : it.status === 'na' ? <Minus size={14} /> : it.status === 'progress' ? null : null}
-          </div>
-          <div style={{ minWidth: 0 }}>
-            <div className="strong" style={{ textDecoration: it.status === 'na' ? 'line-through' : undefined, color: it.status === 'na' ? 'var(--text-3)' : undefined }}>{it.title}</div>
-            {!compact && it.status !== 'na' && (
-              <>
-                <div className="small muted mt-8 row wrap" style={{ gap: 14 }}>
-                  <span>Target <strong className="num">{it.target}</strong></span>
-                  <span>Current <strong className="num">{it.current}</strong></span>
-                  <span>Remaining <strong className="num">{it.remaining}</strong></span>
-                </div>
-                <div className="mt-8" style={{ maxWidth: 360 }}><Progress value={it.progress} tone={it.status === 'done' ? undefined : 'sage'} label={`${it.title} progress`} /></div>
-              </>
-            )}
-            <div className="small muted mt-8">{it.status === 'na' ? 'Marked not applicable.' : it.action}</div>
-          </div>
-          <div className="stack-sm" style={{ alignItems: 'flex-end' }}>
-            <span className={`badge ${it.status === 'done' ? 'badge-success' : it.status === 'progress' ? 'badge-warning' : it.status === 'na' ? '' : 'badge-outline'}`}>
-              {it.status === 'done' ? 'Complete' : it.status === 'progress' ? 'In progress' : it.status === 'na' ? 'N/A' : 'Outstanding'}
-            </span>
-            {it.canNA && !compact && <button className="link-btn small" onClick={() => toggle(it.id)}>{it.status === 'na' ? 'Mark applicable' : 'Not applicable'}</button>}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-export function auditSummary(items: AuditItem[]) {
-  const applicable = items.filter((i) => i.status !== 'na');
-  return { done: applicable.filter((i) => i.status === 'done').length, total: applicable.length };
-}
-
-export { ShieldCheck };

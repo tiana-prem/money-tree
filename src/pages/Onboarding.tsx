@@ -67,7 +67,7 @@ function ManualSetup({ open, onClose }: { open: boolean; onClose: () => void }) 
   if (f.grossPerPaycheck < f.netPerPaycheck) errors.push('Gross pay should be at least net pay.');
   if (f.debtBalance > 0 && f.debtPayment <= 0) errors.push('Add a monthly payment for your debt.');
   return (
-    <Modal open={open} onClose={onClose} wide title="Enter your numbers" subtitle="Estimates are fine — you can refine everything later on the Plan tab."
+    <Modal open={open} onClose={onClose} wide title="Enter your numbers" subtitle="Estimates are fine — you can change anything later under Edit my money."
       footer={<>
         <button className="btn btn-secondary" onClick={onClose}>Cancel</button>
         <button className="btn btn-primary" disabled={errors.length > 0} onClick={() => loadManual(f)}>Create my plan</button>

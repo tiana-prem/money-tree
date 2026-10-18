@@ -1,14 +1,12 @@
 import type { AppData } from '../state/schema';
 import type { Derived } from '../state/derive';
-import type { Cents } from '../engine/types';
+import type { Cents, Transaction } from '../engine/types';
 import { project } from '../engine/projection';
-import { buildReportCard } from '../engine/forecast';
 import { sortByPriority } from '../engine/plan';
 import { describeDays, diffDays, fmtDate, fmtMonth, monthKey, addMonths, startOfMonth } from '../lib/dates';
 import { money } from '../lib/money';
-import { actualsByMonth } from '../engine/forecast';
 
-export type RecCategory = 'retirement' | 'spending' | 'goals' | 'debt' | 'cashflow' | 'forecast';
+export type RecCategory = 'retirement' | 'spending' | 'goals' | 'debt' | 'cashflow';
 
 export type RecAction =
   | { kind: 'set_retirement'; percent: number; netReduction: Cents }
@@ -17,7 +15,7 @@ export type RecAction =
   | { kind: 'raise_goal'; goalId: string; amount: Cents }
   | { kind: 'increase_debt'; accountId: string; amount: Cents }
   | { kind: 'update_line'; lineId: string; amount: Cents }
-  | { kind: 'navigate'; tab: 'goals' | 'plan' | 'simulate' };
+  | { kind: 'navigate'; tab: 'goals' | 'money' | 'simulate' };
 
 export interface Recommendation {
   id: string;
@@ -35,8 +33,19 @@ export interface Recommendation {
   weight: number;
 }
 
+/** Actual spending per budget line, per calendar month. */
+function actualsByMonth(txns: Transaction[]): Record<string, { byLine: Record<string, Cents> }> {
+  const out: Record<string, { byLine: Record<string, Cents> }> = {};
+  for (const t of txns) {
+    if (t.transactionType !== 'expense') continue;
+    const m = (out[monthKey(t.date)] ??= { byLine: {} });
+    m.byLine[t.category] = (m.byLine[t.category] ?? 0) + t.amount;
+  }
+  return out;
+}
+
 export const CATEGORY_LABEL: Record<RecCategory, string> = {
-  retirement: 'Retirement', spending: 'Spending', goals: 'Goals', debt: 'Debt', cashflow: 'Cash flow', forecast: 'Forecast',
+  retirement: 'Retirement', spending: 'Spending', goals: 'Goals', debt: 'Debt', cashflow: 'Cash flow',
 };
 
 /** All recommendations are computed from engine outputs; nothing here is a fixed claim. */
@@ -175,23 +184,6 @@ export function buildRecommendations(d: AppData, x: Derived): Recommendation[] {
     });
   }
 
-  // 6. Forecast-based budget update
-  const rc = buildReportCard(d.forecastSnapshots, d.transactions, [...d.plan.essentialExpenses, ...d.plan.discretionaryBudgets], monthKey(x.today));
-  for (const s of rc.suggestions) {
-    recs.push({
-      id: `forecast-${s.lineId}-${s.suggested}`, category: 'forecast', weight: 60,
-      title: `Update your ${s.label.toLowerCase()} budget to match reality`,
-      issue: `${s.label} averaged ${money(s.avgActual)} over the last 3 months, above the ${money(s.current)} in your plan every month.`,
-      reasoning: 'A plan that underestimates a regular expense makes every projection look better than it is.',
-      impact: `Projections become more accurate; planned spending rises ${money(s.suggested - s.current)}/month`,
-      impactValue: s.suggested - s.current, affectedGoalIds: [],
-      actionLabel: `Set ${s.label.toLowerCase()} to ${money(s.suggested)}`,
-      action: { kind: 'update_line', lineId: s.lineId, amount: s.suggested },
-      math: [{ label: '3-month average actual', value: money(s.avgActual) }, { label: 'Current budget', value: money(s.current) }],
-      formula: ['Suggested only when all of the last 3 completed months exceed the budget by more than 5%', 'Suggested = 3-month average, rounded to the nearest $5'],
-    });
-  }
-
   // 7. Emergency-fund status (informational)
   const ef = goals.find((g) => g.category === 'emergency');
   if (ef && x.goalAnalyses[ef.id].track !== 'complete') {
@@ -237,7 +229,7 @@ export function buildRecommendations(d: AppData, x: Derived): Recommendation[] {
       issue: `Checking is projected to fall to ${money(first.projectedCash)} in ${fmtMonth(first.monthKey)}.`,
       reasoning: 'Planned obligations and purchases exceed the cash available that month.',
       impact: `${money(first.cashFlowShortfall)} short`, impactValue: first.cashFlowShortfall, affectedGoalIds: [],
-      actionLabel: 'Review planned spending', action: { kind: 'navigate', tab: 'plan' },
+      actionLabel: 'Review planned spending', action: { kind: 'navigate', tab: 'money' },
       math: [{ label: 'Income', value: money(first.income) }, { label: 'Essentials + discretionary', value: money(first.essentials + first.discretionary) }, { label: 'Debt', value: money(first.debtPaid) }, { label: 'Purchases + recurring', value: money(first.purchases + first.recurring) }],
       formula: ['Cash = previous cash + income − spending − debt − contributions − purchases'],
     });

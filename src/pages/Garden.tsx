@@ -8,6 +8,7 @@ import { GARDEN_CATEGORY_LABEL, GARDEN_ITEMS, GARDEN_SLOTS } from '../garden/ite
 import { ItemSvg, SceneBackground } from '../garden/art';
 import { POINTS, evaluateWeeksSince, growthStage, itemState, streakBonus, unlockLabel } from '../garden/rules';
 import { emergencyPercent } from '../state/derive';
+import { Leaderboard } from '../components/Leaderboard';
 import type { GardenItem } from '../engine/types';
 import { fmtDate } from '../lib/dates';
 import { money } from '../lib/money';
@@ -172,6 +173,7 @@ Each week is scored once (by week id), so reloads can't add points.`}</div>
               </div>
             )}
           </Card>
+          <Leaderboard />
         </div>
       </div>
 

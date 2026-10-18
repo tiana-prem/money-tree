@@ -1,30 +1,27 @@
 import { useEffect, useState } from 'react';
-import { Flower2, LogOut, Home as HomeIcon, Lightbulb, RotateCcw, Route, ShoppingBag, Target } from 'lucide-react';
+import { Flower2, LogOut, Home as HomeIcon, RotateCcw, ShoppingBag, Target } from 'lucide-react';
 import { useStore } from './state/store';
 import type { TabId } from './state/schema';
 import { ConfirmDialog, Logo, Toasts } from './components/ui';
 import { Onboarding } from './pages/Onboarding';
 import { HomePage } from './pages/Home';
-import { PlanPage } from './pages/Plan';
+import { MoneyPage } from './pages/Money';
 import { GoalsPage } from './pages/Goals';
 import { SimulatePage } from './pages/Simulate';
-import { InsightsPage } from './pages/Insights';
 import { GardenPage } from './pages/Garden';
 import { fmtDate } from './lib/dates';
 import { effectiveToday } from './state/derive';
 
 export const TABS: { id: TabId; label: string; icon: typeof HomeIcon }[] = [
   { id: 'home', label: 'Home', icon: HomeIcon },
-  { id: 'plan', label: 'Plan', icon: Route },
-  { id: 'goals', label: 'Goals', icon: Target },
   { id: 'simulate', label: 'Simulate', icon: ShoppingBag },
-  { id: 'insights', label: 'Insights', icon: Lightbulb },
+  { id: 'goals', label: 'Goals', icon: Target },
   { id: 'garden', label: 'Garden', icon: Flower2 },
 ];
 
 export default function App() {
   const data = useStore((s) => s.data);
-  const tab = useStore((s) => s.tab);
+  const storedTab = useStore((s) => s.tab);
   const setTab = useStore((s) => s.setTab);
   const syncGarden = useStore((s) => s.syncGarden);
   const [confirmReset, setConfirmReset] = useState(false);
@@ -38,7 +35,10 @@ export default function App() {
   if (!data) return <><Onboarding /><Toasts /></>;
 
   const isDemo = data.profile.dataSource !== 'manual';
-  const Page = { home: HomePage, plan: PlanPage, goals: GoalsPage, simulate: SimulatePage, insights: InsightsPage, garden: GardenPage }[tab];
+  const pages = { home: HomePage, simulate: SimulatePage, goals: GoalsPage, garden: GardenPage, money: MoneyPage };
+  // Older saved sessions may hold a tab that no longer exists.
+  const tab = storedTab in pages ? storedTab : 'home';
+  const Page = pages[tab];
 
   return (
     <div className="shell">

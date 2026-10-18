@@ -3,7 +3,6 @@ import { AlertTriangle, ArrowRight, CalendarDays, Check, CheckCircle2, Clock, In
 import { useStore } from '../state/store';
 import { useData, useDerived } from '../state/hooks';
 import { Callout, Card, ConfirmDialog, KV, MathToggle, Modal, MoneyInput, Segmented } from '../components/ui';
-import { ProjectionChart } from '../components/charts';
 import { ProductImage } from '../components/ProductImage';
 import { PRODUCTS, PRODUCT_CATEGORIES } from '../data/products';
 import type { ProductCategory, PurchaseScenario, RecurrenceInterval } from '../engine/types';
@@ -91,32 +90,27 @@ export function SimulatePage() {
                 ))}
               </div>
               {selected.scenarioStatus === 'draft' && <ItemControls item={selected} />}
-              {selected.scenarioStatus === 'applied' && <Callout tone="good" icon={<CheckCircle2 size={17} />}>Applied to your plan as planned spending. Remove it from the Plan tab to undo.</Callout>}
+              {selected.scenarioStatus === 'applied' && <Callout tone="good" icon={<CheckCircle2 size={17} />}>Applied to your plan as planned spending. Remove it under Edit my money to undo.</Callout>}
             </Card>
 
             {/* Before / after */}
-            <Card title="Before and after" subtitle={`Current plan vs. with this scenario, next ${horizon} months`}>
+            <Card title="Before and after" subtitle="Your money now vs. if you buy it">
               <Compare cmp={cmp} />
             </Card>
           </div>
 
-          <Card title="Goal completion dates" subtitle="Calculated from the baseline and scenario projections">
+          <Card title="What it does to your goals" subtitle="When each goal finishes, with and without the purchase">
             {d.goals.length === 0 ? <div className="small muted">Add a goal to see how purchases move it.</div> : cmp.goalImpacts.map((g) => <ImpactRow key={g.goalId} g={g} cmp={cmp} />)}
           </Card>
 
-          <div className="grid g-main">
-            <Card title="Projection" subtitle="Solid = current plan · dashed = with scenario">
-              <ProjectionChart baseline={x.baseline} scenario={cmp.scenario} months={horizon} buffer={d.plan.cashBuffer} height={280} />
-            </Card>
-            <Card title="Purchase timeline" subtitle="Drag the date to see milestones move">
-              <Timeline cmp={cmp} item={selected} />
-            </Card>
-          </div>
+          <Card title="Timeline" subtitle="Drag the date to see your goals move">
+            <Timeline cmp={cmp} item={selected} />
+          </Card>
 
           <Card title="Alternatives" subtitle="Each one is a separate projection. Trying one changes only the simulation.">
             {alternatives.length === 0 ? <div className="small muted">No alternatives for this item.</div> : (
               <div className="grid g-3">
-                {alternatives.map((a) => {
+                {alternatives.slice(0, 3).map((a) => {
                   const top = a.comparison.goalImpacts.filter((g) => g.kind === 'delayed' || g.kind === 'pushed_beyond');
                   return (
                     <div key={a.id} className="card" style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -130,7 +124,7 @@ export function SimulatePage() {
                       <div className="tiny muted">Cost within {horizon} months: {money(a.costInHorizon)}{a.comparison.newShortfallPeriods.length ? ' · creates a cash shortfall' : ''}</div>
                       <div style={{ marginTop: 'auto' }}>
                         {a.id === 'reduce'
-                          ? <div className="tiny faint">Budget changes are applied from Insights or Plan only after you approve them.</div>
+                          ? <div className="tiny faint">Budget changes only happen if you make them under Edit my money.</div>
                           : <button className="btn btn-soft btn-sm btn-block" onClick={() => { const changed = a.items.find((i) => i.id === selected.id)!; st.updateScenarioItem(selected.id, { price: changed.price, plannedDate: changed.plannedDate, payment: changed.payment, recurrence: changed.recurrence, customName: changed.customName, productId: changed.productId }); st.toast('Simulation updated with this alternative.', 'info'); }}>Try this in my simulation</button>}
                       </div>
                     </div>
@@ -189,7 +183,7 @@ export function SimulatePage() {
         body={<div className="stack-sm">
           <div>These will be added to your plan as <strong>planned spending</strong>. Your account balances and transaction history will not change, and nothing is purchased.</div>
           <ul style={{ margin: 0, paddingLeft: 18 }}>{toApply.map((i) => <li key={i.id}>{i.customName}: {i.recurrence ? `${money(i.price)} ${i.recurrence.interval} from ${fmtDate(i.plannedDate)}${i.recurrence.occurrences ? ` for ${i.recurrence.occurrences} payments` : ''}` : i.payment.type === 'installments' ? `${i.payment.months} monthly payments of ${money(installmentPayment(i.price, i.payment.months, i.payment.aprPercent))}` : `${money(i.price)} on ${fmtDate(i.plannedDate)}`}</li>)}</ul>
-          <div className="small">You can remove them later from the Plan tab.</div>
+          <div className="small">You can remove them later under Edit my money.</div>
         </div>}
         confirmLabel="Apply to plan" onCancel={() => setConfirmApply(false)} onConfirm={() => { setConfirmApply(false); st.applyScenario(); }} />
     </div>
@@ -229,7 +223,7 @@ function ItemControls({ item }: { item: PurchaseScenario }) {
         </div>
       </div>
       {!item.recurrence ? (
-        <div className="stack-sm">
+        <details open={pay.type === 'installments'}><summary className="link-btn small">More options</summary><div className="stack-sm mt-8">
           <span className="label small strong">Payment</span>
           <Segmented label="Payment method" value={pay.type} onChange={(v) => upd({ payment: v === 'full' ? { type: 'full' } : { type: 'installments', months: 6, aprPercent: 0 } })} options={[{ value: 'full', label: 'Pay in full' }, { value: 'installments', label: 'Installments' }]} />
           {pay.type === 'installments' && (
@@ -241,7 +235,7 @@ function ItemControls({ item }: { item: PurchaseScenario }) {
               <div className="full small muted">{money(installmentPayment(item.price, pay.months, pay.aprPercent), { exact: true })}/mo · total {money(totalPurchaseCost(item), { exact: true })}{pay.aprPercent > 0 ? ` (${money(totalPurchaseCost(item) - item.price)} interest)` : ''}. Model only plans actually offered to you.</div>
             </div>
           )}
-        </div>
+        </div></details>
       ) : (
         <div className="form-grid">
           <div className="field"><label htmlFor={`ri-${item.id}`}>Repeats</label>
@@ -261,17 +255,14 @@ function Compare({ cmp }: { cmp: ScenarioComparison }) {
   const ef = cmp.emergency;
   const rows: { label: string; before: string; after: string; worse: boolean; note?: string }[] = [
     { label: 'Safe to spend this month', before: money(cmp.safeBefore.safeToSpend), after: money(cmp.safeAfter.safeToSpend), worse: cmp.safeAfter.safeToSpend < cmp.safeBefore.safeToSpend },
-    { label: `Lowest checking balance (${h} mo)`, before: money(cmp.minCash.before), after: money(cmp.minCash.after), worse: cmp.minCash.after < cmp.minCash.before },
-    { label: `Checking in ${h} months`, before: money(cmp.cashAtHorizon.before), after: money(cmp.cashAtHorizon.after), worse: cmp.cashAtHorizon.after < cmp.cashAtHorizon.before },
-    { label: `Savings in ${h} months`, before: money(cmp.savingsAtHorizon.before), after: money(cmp.savingsAtHorizon.after), worse: cmp.savingsAtHorizon.after < cmp.savingsAtHorizon.before },
     ...(ef ? [{ label: `Emergency fund, end of ${fmtMonth(ef.atMonth)}`, before: `${money(ef.before)} (${Math.round((ef.before / ef.target) * 100)}%)`, after: `${money(ef.after)} (${Math.round((ef.after / ef.target) * 100)}%)`, worse: ef.after < ef.before }] : []),
-    { label: 'Monthly savings capacity', before: money(cmp.savingsCapacity.before), after: money(cmp.savingsCapacity.after), worse: cmp.savingsCapacity.after < cmp.savingsCapacity.before },
-    { label: 'Cash-flow shortfall', before: cmp.baseline.shortfallPeriods.filter((p) => p <= h).length ? 'Yes' : 'None', after: cmp.scenario.shortfallPeriods.filter((p) => p <= h).length ? `Yes — ${fmtMonth(cmp.scenario.snapshots[cmp.scenario.shortfallPeriods[0]].monthKey)}` : 'None', worse: cmp.newShortfallPeriods.length > 0 },
+    { label: `Total saved in ${h} months`, before: money(cmp.savingsAtHorizon.before), after: money(cmp.savingsAtHorizon.after), worse: cmp.savingsAtHorizon.after < cmp.savingsAtHorizon.before },
+    ...(cmp.monthlyRecurringCost ? [{ label: 'Left for goals each month', before: money(cmp.savingsCapacity.before), after: money(cmp.savingsCapacity.after), worse: true }] : []),
   ];
   return (
     <div>
       <div className="compare">
-        <div className="h">&nbsp;</div><div className="h right">Current plan</div><div className="h scen right">With scenario</div>
+        <div className="h">&nbsp;</div><div className="h right">Now</div><div className="h scen right">If you buy</div>
         {rows.map((r) => (
           <FragmentRow key={r.label} r={r} />
         ))}

@@ -5,9 +5,9 @@ import { installmentPayment, project, expandPurchase } from './projection';
 import { analyzeGoal } from './goals';
 import { compareScenario } from './scenario';
 import { analyzeMatch, matchPercent } from './match';
-import { buildReportCard } from './forecast';
 import { applyWeeklyRewards, evaluateWeeksSince, streakBonus, buyItem } from '../garden/rules';
 import { GARDEN_ITEMS } from '../garden/items';
+import { leaderboard, pointsEarned } from '../garden/friends';
 import { createDemoData } from '../data/seed';
 import type { PurchaseScenario } from './types';
 import { diffDays } from '../lib/dates';
@@ -192,16 +192,6 @@ describe('employer match', () => {
   });
 });
 
-describe('forecast report card', () => {
-  it('uses mean absolute error over completed months', () => {
-    const rc = buildReportCard(demo.forecastSnapshots, demo.transactions, [...demo.plan.essentialExpenses, ...demo.plan.discretionaryBudgets], '2026-10');
-    expect(rc.rows).toHaveLength(6);
-    const mae = Math.round(rc.rows.reduce((a, r) => a + Math.abs(r.spendingError), 0) / rc.rows.length);
-    expect(rc.maeSpending).toBe(mae);
-    expect(rc.suggestions.some((s) => s.lineId === 'groceries')).toBe(true);
-  });
-});
-
 describe('garden rewards', () => {
   it('seeded garden came from the weekly rules', () => {
     expect(demo.garden.successfulWeeks).toBe(8);
@@ -226,6 +216,20 @@ describe('garden rewards', () => {
     const r = buyItem(demo.garden, cheap, AS_OF, 0.5);
     expect(r.ok).toBe(true);
     if (r.ok) expect(r.state.pointsBalance).toBe(demo.garden.pointsBalance - 150);
+  });
+});
+
+describe('friends leaderboard', () => {
+  it('ranks by points earned, unaffected by shop spending', () => {
+    expect(pointsEarned(demo.garden)).toBe(1000);
+    const spent = { ...demo.garden, pointsBalance: 0 };
+    const rows = leaderboard(spent, 'Maya', 'earned');
+    expect(rows.map((r) => r.rank)).toEqual([1, 2, 3, 4, 5]);
+    expect(rows.find((r) => r.isYou)!.rank).toBe(3);
+  });
+  it('can rank by streak', () => {
+    const rows = leaderboard(demo.garden, 'Maya', 'streak');
+    expect(rows[0].streak).toBeGreaterThanOrEqual(rows[rows.length - 1].streak);
   });
 });
 

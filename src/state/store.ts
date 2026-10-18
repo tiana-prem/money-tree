@@ -57,7 +57,6 @@ interface Store {
   removePlanned: (kind: 'purchase' | 'recurring', id: string) => void;
 
   setRecFeedback: (id: string, fb: Omit<RecFeedback, 'updatedAt'>) => void;
-  toggleAuditNA: (id: string) => void;
   clearRecFeedback: (id: string) => void;
   setGoalContribution: (goalId: string, amount: number) => void;
 
@@ -106,7 +105,7 @@ export const useStore = create<Store>()(
         loadDemo: (source = 'demo') => {
           const d = createDemoData(todayISO());
           d.profile.dataSource = source;
-          if (source === 'paystub') d.activity = [{ id: newId('act'), date: d.asOf, kind: 'account', title: 'Simulated ADP paystub imported', detail: 'Review the fields on the Plan tab. No real payroll account is connected.' }, ...d.activity];
+          if (source === 'paystub') d.activity = [{ id: newId('act'), date: d.asOf, kind: 'account', title: 'Simulated ADP paystub imported', detail: 'Review them under Edit my money. No real payroll account is connected.' }, ...d.activity];
           set({ data: d, tab: 'home', goalDetailId: null });
         },
         loadManual: (input) => set({ data: createManualData(todayISO(), input), tab: 'home', goalDetailId: null }),
@@ -251,7 +250,6 @@ export const useStore = create<Store>()(
 
         setRecFeedback: (id, fb) => mutate((d) => ({ ...d, recommendationFeedback: { ...d.recommendationFeedback, [id]: { ...fb, updatedAt: effectiveToday(d) } } })),
         clearRecFeedback: (id) => mutate((d) => { const { [id]: _removed, ...rest } = d.recommendationFeedback; return { ...d, recommendationFeedback: rest }; }),
-        toggleAuditNA: (id) => mutate((d) => ({ ...d, auditNotApplicable: d.auditNotApplicable.includes(id) ? d.auditNotApplicable.filter((x) => x !== id) : [...d.auditNotApplicable, id] })),
         setGoalContribution: (goalId, amount) => mutate((d) => ({ ...d, goals: d.goals.map((g) => (g.id === goalId ? { ...g, contributionAmount: amount, contributionFrequency: 'monthly' } : g)) })),
 
         syncGarden: () => mutate((d) => {

@@ -1,5 +1,5 @@
 import type {
-  BudgetPlan, Cents, FinancialAccount, FinancialGoal, ForecastSnapshot, GardenState, ISODate, Paystub, PurchaseScenario, RecommendationStatus, Transaction, UserProfile,
+  BudgetPlan, Cents, FinancialAccount, FinancialGoal, GardenState, ISODate, Paystub, PurchaseScenario, RecommendationStatus, Transaction, UserProfile,
 } from '../engine/types';
 
 export interface ActivityEntry {
@@ -17,7 +17,8 @@ export interface RecFeedback {
   updatedAt: ISODate;
 }
 
-export type TabId = 'home' | 'plan' | 'goals' | 'simulate' | 'insights' | 'garden';
+/** The four tabs, plus the Money screen opened from Home. */
+export type TabId = 'home' | 'simulate' | 'goals' | 'garden' | 'money';
 
 export interface AppData {
   version: 1;
@@ -31,10 +32,7 @@ export interface AppData {
   goals: FinancialGoal[];
   scenario: { items: PurchaseScenario[]; selectedId: string | null };
   recommendationFeedback: Record<string, RecFeedback>;
-  forecastSnapshots: ForecastSnapshot[];
   garden: GardenState;
   activity: ActivityEntry[];
   connections: { payroll: boolean; bank: boolean };
-  /** Audit requirement ids the user marked as not applicable. */
-  auditNotApplicable: string[];
 }

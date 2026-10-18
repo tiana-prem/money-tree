@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Area, Bar, BarChart, CartesianGrid, ComposedChart, Legend, Line, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { Area, CartesianGrid, ComposedChart, Line, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import type { ProjectionResult } from '../engine/types';
 import type { PlanSummary } from '../engine/plan';
 import { ChartTooltip } from './ui';
@@ -11,11 +11,11 @@ const AXIS = { fontSize: 12, fill: '#868c86' };
 /** Stacked allocation of monthly take-home pay. Every segment is read from the plan summary. */
 export function AllocationBar({ s }: { s: PlanSummary }) {
   const parts = [
-    { key: 'Essentials', v: s.essentials, c: 'var(--c-essentials)' },
-    { key: 'Discretionary', v: s.discretionary + s.recurringCommitments, c: 'var(--c-discretionary)' },
-    { key: 'Goal savings', v: s.plannedSavings, c: 'var(--c-savings)' },
-    { key: 'Debt payments', v: s.debtPayments, c: 'var(--c-debt)' },
-    { key: 'Unassigned', v: Math.max(0, s.unallocated), c: 'var(--c-unallocated)' },
+    { key: 'Bills & essentials', v: s.essentials, c: 'var(--c-essentials)' },
+    { key: 'Fun money', v: s.discretionary + s.recurringCommitments, c: 'var(--c-discretionary)' },
+    { key: 'Goals', v: s.plannedSavings, c: 'var(--c-savings)' },
+    { key: 'Debt', v: s.debtPayments, c: 'var(--c-debt)' },
+    { key: 'Not assigned yet', v: Math.max(0, s.unallocated), c: 'var(--c-unallocated)' },
   ].filter((p) => p.v > 0);
   const total = parts.reduce((a, p) => a + p.v, 0);
   return (
@@ -27,36 +27,6 @@ export function AllocationBar({ s }: { s: PlanSummary }) {
         {parts.map((p) => <span key={p.key}><span className="swatch" style={{ background: p.c }} />{p.key} <strong className="num" style={{ color: 'var(--text)' }}>{money(p.v)}</strong> <span className="faint">{Math.round((p.v / s.monthlyNet) * 100)}%</span></span>)}
       </div>
       {s.overAllocated && <div className="small neg mt-8">Planned outflows exceed take-home pay by {money(-s.unallocated)} per month.</div>}
-    </div>
-  );
-}
-
-/** Monthly cash-flow chart: one stacked bar per month from the projection snapshots. */
-export function CashFlowChart({ proj, months }: { proj: ProjectionResult; months: number }) {
-  const data = proj.snapshots.slice(1, months + 1).map((s) => ({
-    month: s.monthKey,
-    Essentials: s.essentials / 100,
-    Discretionary: (s.discretionary + s.purchases + s.recurring) / 100,
-    'Goal savings': Object.values(s.contributions).reduce((a, b) => a + b, 0) / 100,
-    'Debt payments': s.debtPaid / 100,
-    'Kept in checking': Math.max(0, s.income - s.essentials - s.discretionary - s.purchases - s.recurring - s.debtPaid - Object.values(s.contributions).reduce((a, b) => a + b, 0)) / 100,
-  }));
-  return (
-    <div className="chart-wrap sm">
-      <ResponsiveContainer>
-        <BarChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }} barCategoryGap="22%">
-          <CartesianGrid vertical={false} stroke="var(--c-grid)" />
-          <XAxis dataKey="month" tick={AXIS} tickLine={false} axisLine={false} tickFormatter={(m) => fmtMonth(m, { short: true })} interval="preserveStartEnd" minTickGap={12} />
-          <YAxis tick={AXIS} tickLine={false} axisLine={false} tickFormatter={(v) => moneyShort(v * 100)} width={52} />
-          <Tooltip cursor={{ fill: 'rgba(0,0,0,0.04)' }} content={<ChartTooltip formatter={(v: number) => money(v * 100)} labelFormatter={(m: string) => fmtMonth(m)} />} />
-          <Bar dataKey="Essentials" stackId="a" fill="var(--c-essentials)" stroke="#fff" strokeWidth={1} />
-          <Bar dataKey="Discretionary" stackId="a" fill="var(--c-discretionary)" stroke="#fff" strokeWidth={1} />
-          <Bar dataKey="Goal savings" stackId="a" fill="var(--c-savings)" stroke="#fff" strokeWidth={1} />
-          <Bar dataKey="Debt payments" stackId="a" fill="var(--c-debt)" stroke="#fff" strokeWidth={1} />
-          <Bar dataKey="Kept in checking" stackId="a" fill="var(--c-unallocated)" stroke="#fff" strokeWidth={1} radius={[4, 4, 0, 0]} />
-          <Legend iconType="square" iconSize={10} wrapperStyle={{ fontSize: 12, paddingTop: 6 }} />
-        </BarChart>
-      </ResponsiveContainer>
     </div>
   );
 }
