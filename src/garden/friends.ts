@@ -16,10 +16,10 @@ export interface Friend {
 }
 
 export const DEMO_FRIENDS: Friend[] = [
-  { id: 'f-priya', name: 'Priya', earned: 1325, streak: 6, lastWeek: 200, color: '#e87ba4' },
-  { id: 'f-jordan', name: 'Jordan', earned: 1100, streak: 3, lastWeek: 150, color: '#2a78d6' },
-  { id: 'f-alex', name: 'Alex', earned: 875, streak: 0, lastWeek: 0, color: '#eb6834' },
-  { id: 'f-sam', name: 'Sam', earned: 650, streak: 1, lastWeek: 100, color: '#1baf7a' },
+  { id: 'f-priya', name: 'Priya', earned: 1325, streak: 6, lastWeek: 200, color: '#f6b393' },
+  { id: 'f-jordan', name: 'Jordan', earned: 1100, streak: 3, lastWeek: 150, color: '#9cc7f7' },
+  { id: 'f-alex', name: 'Alex', earned: 875, streak: 0, lastWeek: 0, color: '#c4b5fd' },
+  { id: 'f-sam', name: 'Sam', earned: 650, streak: 1, lastWeek: 100, color: '#f7d474' },
 ];
 
 export type LeaderboardSort = 'earned' | 'streak';
@@ -40,7 +40,7 @@ export function lastWeekPoints(g: GardenState): number {
 }
 
 export function leaderboard(g: GardenState, name: string, sort: LeaderboardSort): LeaderRow[] {
-  const you: Friend = { id: 'you', name: name || 'You', earned: pointsEarned(g), streak: g.currentStreak, lastWeek: lastWeekPoints(g), color: '#1f5c3f' };
+  const you: Friend = { id: 'you', name: name || 'You', earned: pointsEarned(g), streak: g.currentStreak, lastWeek: lastWeekPoints(g), color: '#c8ec8a' };
   const rows = [you, ...DEMO_FRIENDS].sort((a, b) => b[sort] - a[sort] || b.earned - a.earned || (a.id === 'you' ? -1 : 1));
   return rows.map((r, i) => ({ ...r, isYou: r.id === 'you', rank: i + 1 }));
 }

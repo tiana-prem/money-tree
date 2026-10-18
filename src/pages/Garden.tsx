@@ -1,16 +1,16 @@
 import { useMemo, useState } from 'react';
-import { Award, Check, Flame, Hand, Lock, Move, Sparkles, Sprout, Trash2, X } from 'lucide-react';
+import { Check, Flame, Hand, Leaf, Lock, Move, ShoppingBag, Sparkles, Sprout, Trash2, X } from 'lucide-react';
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { useStore } from '../state/store';
 import { useData, useDerived } from '../state/hooks';
-import { Card, ChartTooltip, KV, MathToggle, Progress } from '../components/ui';
+import { Card, ChartTooltip, MathToggle, Progress } from '../components/ui';
 import { GARDEN_CATEGORY_LABEL, GARDEN_ITEMS, GARDEN_SLOTS } from '../garden/items';
 import { ItemSvg, SceneBackground } from '../garden/art';
 import { POINTS, evaluateWeeksSince, growthStage, itemState, streakBonus, unlockLabel } from '../garden/rules';
 import { emergencyPercent } from '../state/derive';
 import { Leaderboard } from '../components/Leaderboard';
 import type { GardenItem } from '../engine/types';
-import { fmtDate } from '../lib/dates';
+import { addDays, fmtDate } from '../lib/dates';
 import { money } from '../lib/money';
 
 type ShopCat = GardenItem['category'];
@@ -50,7 +50,7 @@ export function GardenPage() {
     <div className="page">
       <div className="page-head">
         <div>
-          <h1>Your garden</h1>
+          <h1 className="hero-title">Your garden,<br /><span className="accent">growing weekly.</span></h1>
           <p>Consistent weeks grow your garden. Earn points by staying within your weekly plan, then spend them on plants and decor.</p>
         </div>
         <div className="row">
@@ -164,8 +164,8 @@ Each week is scored once (by week id), so reloads can't add points.`}</div>
                 <ResponsiveContainer>
                   <LineChart data={pointsSeries} margin={{ top: 6, right: 8, left: 0, bottom: 0 }}>
                     <CartesianGrid vertical={false} stroke="var(--c-grid)" />
-                    <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#868c86' }} tickLine={false} axisLine={false} tickFormatter={(v) => fmtDate(v, { year: false })} minTickGap={20} />
-                    <YAxis tick={{ fontSize: 11, fill: '#868c86' }} tickLine={false} axisLine={false} width={40} />
+                    <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#7c8697' }} tickLine={false} axisLine={false} tickFormatter={(v) => fmtDate(v, { year: false })} minTickGap={20} />
+                    <YAxis tick={{ fontSize: 11, fill: '#7c8697' }} tickLine={false} axisLine={false} width={40} />
                     <Tooltip content={<ChartTooltip labelFormatter={(v: string) => fmtDate(v)} />} />
                     <Line dataKey="Earned" name="Points earned (total)" stroke="var(--primary)" strokeWidth={2} dot={{ r: 3 }} />
                   </LineChart>
@@ -210,25 +210,26 @@ Each week is scored once (by week id), so reloads can't add points.`}</div>
         </div>
       </Card>
 
-      <Card className="mt-16" title="Points history" subtitle="Every point earned and spent">
-        <div className="table-wrap">
-          <table className="table">
-            <thead><tr><th>Date</th><th>Event</th><th className="r">Base</th><th className="r">Streak bonus</th><th className="r">Points</th></tr></thead>
-            <tbody>
-              {[...g.rewardHistory].reverse().map((r) => (
-                <tr key={r.id}>
-                  <td>{fmtDate(r.date, { year: false })}</td>
-                  <td>{r.type === 'weekly_reward' ? <span className="row" style={{ gap: 6 }}><Award size={14} color="var(--primary)" /> Qualified week ({r.weekId}) · streak {r.streakAfter}</span> : r.type === 'missed_week' ? <span className="muted">Week {r.weekId} didn't qualify — {r.note.toLowerCase()}</span> : r.note}</td>
-                  <td className="r">{r.basePoints ?? '—'}</td>
-                  <td className="r">{r.streakBonus !== undefined ? r.streakBonus : '—'}</td>
-                  <td className={`r strong ${r.points > 0 ? 'pos' : r.points < 0 ? 'neg' : ''}`}>{r.points > 0 ? `+${r.points}` : r.points}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <KV k="Balance" v={`${g.pointsBalance} points`} total />
-      </Card>
+      <div className="section-head"><h2>Your growth journal</h2><span className="small muted num">{g.pointsBalance} points</span></div>
+      <ul className="journal">
+        {[...g.rewardHistory].reverse().map((r) => {
+          const weekStart = addDays(r.date, -7);
+          const title = r.type === 'weekly_reward' || r.type === 'missed_week' ? `Week of ${fmtDate(weekStart, { year: false })}` : r.type === 'starter' ? 'Starter garden' : r.note;
+          const sub = r.type === 'weekly_reward'
+            ? `${r.streakAfter}-week streak · ${r.basePoints} + ${r.streakBonus} bonus`
+            : r.type === 'missed_week' ? `Didn't qualify: ${r.note.charAt(0).toLowerCase()}${r.note.slice(1)}`
+              : r.type === 'purchase' ? `Garden shop · ${fmtDate(r.date, { year: false })}` : 'Clover patch, gravel path and spring theme';
+          return (
+            <li key={r.id}>
+              {r.type === 'weekly_reward' ? <Check size={20} color="var(--mint)" /> : r.type === 'missed_week' ? <X size={20} color="var(--text-3)" /> : r.type === 'purchase' ? <ShoppingBag size={18} color="var(--peach)" /> : <Sprout size={20} color="var(--mint)" />}
+              <div><div className="j-title">{title}</div><div className="j-sub">{sub}</div></div>
+              <span className={`j-pts ${r.points < 0 ? 'neg' : r.points === 0 ? 'zero' : ''}`}>{r.points > 0 ? `+${r.points}` : r.points === 0 ? '0' : `−${Math.abs(r.points)}`}</span>
+            </li>
+          );
+        })}
+      </ul>
+      <p className="muted mt-16" style={{ maxWidth: 640 }}>One reward per completed week. Missing a target resets the streak, but your plants and earned points stay yours. Points have no cash value.</p>
+      <div className="page-foot"><Leaf size={16} /> Grow at your own pace.</div>
     </div>
   );
 }

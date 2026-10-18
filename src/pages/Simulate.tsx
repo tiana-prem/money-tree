@@ -13,6 +13,10 @@ import { explainPurchase } from '../explain/explain';
 import { addDays, describeDays, diffDays, fmtDate, fmtMonth, isValidISO } from '../lib/dates';
 import { money } from '../lib/money';
 
+const CATEGORY_LABEL: Record<string, string> = {
+  All: 'All', Electronics: 'Tech', Lifestyle: 'Style', Furniture: 'Home', Transportation: 'Rides', Housing: 'Housing', Travel: 'Travel', Other: 'Other',
+};
+
 export function SimulatePage() {
   const d = useData();
   const x = useDerived();
@@ -41,16 +45,15 @@ export function SimulatePage() {
     <div className="page">
       <div className="page-head">
         <div>
-          <h1>Simulate a purchase</h1>
-          <p>Test it before you buy it. Simulations never change your balances, transactions or plan unless you choose to apply them.</p>
+          <h1 className="hero-title">Try before you<br /><span className="accent-salmon">buy into it.</span></h1>
+          <p>No checkout. Just a clearer picture of what fits.</p>
         </div>
-        <button className="btn btn-secondary" onClick={() => setCustom(true)}><Plus size={16} /> Custom purchase</button>
       </div>
 
       {drafts.length > 0 && selected && cmp && explanation ? (
         <div className="stack">
           {/* Headline */}
-          <Card className="hero">
+          <Card>
             <div className="row-between wrap" style={{ alignItems: 'flex-start' }}>
               <div style={{ maxWidth: 760 }}>
                 <span className="badge badge-info"><Layers size={12} /> What-if scenario · not a real transaction</span>
@@ -75,9 +78,9 @@ export function SimulatePage() {
             <Card title="Scenario" subtitle={drafts.length > 1 ? 'Switched on = bought together. Options are compared one at a time below.' : undefined}>
               <div className="list">
                 {items.map((i) => (
-                  <div key={i.id} className="list-item" style={{ cursor: 'pointer', background: i.id === selected.id ? 'var(--sage-soft)' : undefined, borderRadius: 10, paddingLeft: 8, paddingRight: 8 }}
+                  <div key={i.id} className="list-item" style={{ cursor: 'pointer', background: i.id === selected.id ? 'var(--primary-soft)' : undefined, borderRadius: 16, paddingLeft: 8, paddingRight: 8 }}
                     onClick={() => st.selectScenarioItem(i.id)} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter') st.selectScenarioItem(i.id); }} aria-pressed={i.id === selected.id}>
-                    <div style={{ width: 52, borderRadius: 8, overflow: 'hidden', flexShrink: 0 }}><ProductImage src={PRODUCTS.find((p) => p.id === i.productId)?.imageUrl} alt={i.customName} category={i.category} /></div>
+                    <div style={{ width: 56, borderRadius: 14, overflow: 'hidden', flexShrink: 0 }}><ProductImage src={PRODUCTS.find((p) => p.id === i.productId)?.imageUrl} alt={i.customName} category={i.category} cutout={PRODUCTS.find((p) => p.id === i.productId)?.cutout} /></div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div className="strong" style={{ opacity: i.included ? 1 : 0.5 }}>{i.customName}</div>
                       <div className="tiny muted">{money(i.price)}{i.recurrence ? ` / ${i.recurrence.interval.replace('ly', '')}` : ''} · {fmtDate(i.plannedDate, { year: false })}{i.payment.type === 'installments' ? ` · ${i.payment.months} payments` : ''}</div>
@@ -147,39 +150,44 @@ export function SimulatePage() {
           </Card>
         </div>
       ) : (
-        <Callout tone="info" icon={<ShoppingBag size={17} />}>
-          <strong>Pick something to test.</strong> Add a product below or enter a custom purchase. Clover will rerun your projection and show exactly which goals move and by how much.
-          {items.some((i) => i.scenarioStatus === 'applied') && <div className="mt-8">Previously applied purchases are already part of your plan.</div>}
-        </Callout>
+        items.some((i) => i.scenarioStatus === 'applied') ? <Callout tone="good" icon={<ShoppingBag size={17} />}>Previously applied purchases are already part of your plan. Pick something else to test.</Callout> : null
       )}
 
       {/* Catalog */}
-      <Card className="mt-16" title="Product catalog" subtitle="Curated demo products. Prices are illustrative estimates.">
-        <div className="row wrap" style={{ gap: 12 }}>
-          <div className="search" style={{ flex: '1 1 260px' }}>
-            <Search size={16} />
-            <label htmlFor="psearch" className="sr-only">Search products</label>
-            <input id="psearch" className="input" placeholder="Search phones, laptops, cars, trips…" value={q} onChange={(e) => setQ(e.target.value)} />
-          </div>
-          <div className="chips" role="group" aria-label="Filter by category">
-            {(['All', ...PRODUCT_CATEGORIES.filter((c) => c === 'Other' ? false : true)] as const).map((c) => <button key={c} className="chip" aria-pressed={cat === c} onClick={() => setCat(c)}>{c}</button>)}
-          </div>
+      <section className={drafts.length > 0 ? 'mt-24' : ''} id="catalog">
+        {drafts.length > 0 && <div className="section-head" style={{ marginTop: 8 }}><h2>Test something else</h2></div>}
+        <div className="search">
+          <Search size={20} />
+          <label htmlFor="psearch" className="sr-only">Search products</label>
+          <input id="psearch" className="input" placeholder="Phones, sneakers, a weekend trip…" value={q} onChange={(e) => setQ(e.target.value)} />
+        </div>
+        <div className="chips mt-16" role="group" aria-label="Filter by category">
+          {(['All', ...PRODUCT_CATEGORIES.filter((c) => c !== 'Other')] as const).map((c) => <button key={c} className="chip" aria-pressed={cat === c} onClick={() => setCat(c)}>{CATEGORY_LABEL[c]}</button>)}
+        </div>
+        <div className="row-between mt-16">
+          <span className="small muted">Illustrative prices</span>
+          <button className="link-btn" onClick={() => setCustom(true)}><Plus size={16} /> Add item</button>
         </div>
         <div className="product-grid mt-16">
           {filtered.map((p) => {
             const inScenario = drafts.some((i) => i.productId === p.id);
+            const test = () => {
+              if (inScenario) st.selectScenarioItem(drafts.find((i) => i.productId === p.id)!.id);
+              else st.addScenarioFromProduct(p);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            };
             return (
               <div key={p.id} className={`product ${inScenario ? 'selected' : ''}`}>
-                <ProductImage src={p.imageUrl} alt={p.name} category={p.category} />
+                <ProductImage src={p.imageUrl} alt={p.name} category={p.category} cutout={p.cutout} />
                 <div className="product-body">
-                  <div className="row-between"><span className="badge">{p.category}</span>{p.recurring && <span className="badge badge-info"><Repeat size={11} /> Recurring</span>}</div>
-                  <div className="strong">{p.name}</div>
-                  <div className="price">{money(p.price)}{p.recurring ? <span className="small muted"> / {p.recurring.interval === 'monthly' ? 'mo' : p.recurring.interval}</span> : ''}</div>
-                  <div className="tiny muted" style={{ flex: 1 }}>{p.description}</div>
-                  <button className={`btn btn-sm ${inScenario ? 'btn-soft' : 'btn-primary'} mt-8`} onClick={() => inScenario ? st.selectScenarioItem(drafts.find((i) => i.productId === p.id)!.id) : st.addScenarioFromProduct(p)}>
-                    {inScenario ? <><Check size={14} /> In simulation</> : <><Plus size={14} /> Add to simulation</>}
-                  </button>
-                  <div className="tiny faint" title={p.imageCredit}>Photo: {p.imageCredit.split(' — ')[0]}</div>
+                  <div className="p-name">{p.name}</div>
+                  {p.recurring && <span className="badge badge-info" style={{ alignSelf: 'flex-start' }}><Repeat size={11} /> {p.recurring.interval === 'monthly' ? 'Monthly' : p.recurring.interval}</span>}
+                  <div className="p-foot">
+                    <span className="price">{money(p.price)}{p.recurring ? <span className="small" style={{ fontWeight: 600 }}>/mo</span> : ''}</span>
+                    <button className="btn btn-pill btn-sm" onClick={test} aria-label={`${inScenario ? 'Show' : 'Test'} ${p.name}`}>
+                      {inScenario ? <><Check size={14} /> Testing</> : <>Test it <ArrowRight size={14} /></>}
+                    </button>
+                  </div>
                 </div>
               </div>
             );
@@ -188,7 +196,7 @@ export function SimulatePage() {
         {filtered.length === 0 && (
           <div className="empty"><div className="icon-chip"><Search size={18} /></div>No products match “{q}”.<div className="mt-12"><button className="btn btn-secondary btn-sm" onClick={() => setCustom(true)}>Enter it as a custom purchase</button></div></div>
         )}
-      </Card>
+      </section>
 
       <CustomPurchase open={custom} onClose={() => setCustom(false)} />
       <ConfirmDialog open={confirmApply} title="Apply this scenario to your plan?"

@@ -19,7 +19,7 @@ export interface Explanation {
 
 export function explainPurchase(cmp: ScenarioComparison, items: PurchaseScenario[], goals: FinancialGoal[]): Explanation {
   const included = items.filter((i) => i.included && i.scenarioStatus === 'draft');
-  const label = included.length === 1 ? `Buying ${included[0].customName.toLowerCase()}` : `These ${included.length} purchases`;
+  const label = included.length === 1 ? `Buying ${included[0].customName}` : `These ${included.length} purchases`;
   const when = included.length === 1 ? (included[0].plannedDate === cmp.baseline.startDate ? ' now' : ` on ${fmtDate(included[0].plannedDate, { year: false })}`) : '';
 
   const delayed = cmp.goalImpacts.filter((g) => g.kind === 'delayed' && (g.delayDays ?? 0) > 0);

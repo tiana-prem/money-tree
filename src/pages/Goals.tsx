@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { ArrowDown, ArrowLeft, ArrowUp, Pause, Pencil, Play, Plus, ShoppingBag, Trash2 } from 'lucide-react';
+import { ArrowDown, ArrowLeft, ArrowUp, Pause, Pencil, Play, Plus, ShoppingBag, Target, Trash2 } from 'lucide-react';
 import { Area, AreaChart, CartesianGrid, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { useStore } from '../state/store';
 import { useData, useDerived } from '../state/hooks';
@@ -22,21 +22,24 @@ export function GoalsPage() {
   const goals = x.sortedGoalIds.map((id) => d.goals.find((g) => g.id === id)!);
   return (
     <div className="page">
-      <div className="page-head">
-        <div>
-          <h1>Goals</h1>
-          <p>What you're saving for, and what it takes to get there. Goals are funded in priority order.</p>
-        </div>
-        <button className="btn btn-primary" onClick={() => setAdding(true)}><Plus size={17} /> Add goal</button>
-      </div>
+      <h1 className="hero-title" style={{ marginBottom: 24 }}>What you’re<br /><span className="accent">saving for.</span></h1>
 
-      <div className="grid g-2">
-        <Stat label="Saved so far" value={money(d.goals.reduce((a, g) => a + g.currentSavedAmount, 0))} sub={`${money(d.goals.reduce((a, g) => a + x.goalAnalyses[g.id].remaining, 0))} still to go`} />
-        <Stat label="Going to goals each month" value={money(x.summary.plannedSavings)} sub={x.summary.overAllocated ? `${money(-x.summary.unallocated)} more than your budget allows` : `${money(x.summary.unallocated)} more available`} neg={x.summary.overAllocated} />
+      <section className="card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+        <div>
+          <div className="metric-label">Saved across your goals</div>
+          <div className="metric-xl mt-12">{money(d.goals.reduce((a, g) => a + g.currentSavedAmount, 0))}</div>
+          <div className="small muted mt-8">{money(d.goals.reduce((a, g) => a + x.goalAnalyses[g.id].remaining, 0))} still to go</div>
+        </div>
+        <Target size={52} color="var(--primary)" strokeWidth={2.2} style={{ flexShrink: 0 }} />
+      </section>
+
+      <div className="row-between" style={{ margin: '22px 0 16px' }}>
+        <span className={x.summary.overAllocated ? 'neg' : 'muted'}>{money(x.summary.plannedSavings)} planned each month{x.summary.overAllocated ? ` · ${money(-x.summary.unallocated)} over budget` : ''}</span>
+        <button className="btn btn-primary btn-lg" onClick={() => setAdding(true)}><Plus size={20} /> Add goal</button>
       </div>
 
       {x.summary.overAllocated && (
-        <div className="mt-16">
+        <div style={{ marginBottom: 16 }}>
           <Callout tone="warn">
             <strong>Your goals ask for {money(x.summary.plannedSavings)}/month, but your plan can fund {money(Math.max(0, x.summary.savingsCapacity))}.</strong> Clover funds the highest priorities first:{' '}
             {x.allocation.filter((a) => a.shortfall > 0).map((a) => `${d.goals.find((g) => g.id === a.goalId)?.name} gets ${money(a.funded)} of ${money(a.requested)}`).join('; ')}. Reorder priorities, lower a contribution, or extend a target date.
@@ -44,28 +47,29 @@ export function GoalsPage() {
         </div>
       )}
 
-      <Card className="mt-16" title="Your goals" subtitle="Use the arrows to change priority. Select a goal for details.">
-        {goals.length === 0 ? (
+      {goals.length === 0 ? (
+        <Card>
           <div className="empty">
             <div className="icon-chip green"><Plus size={18} /></div>
             <div className="strong">No goals yet</div>
             <p className="small muted mt-8">Start with an emergency fund of three months of essentials ({money(3 * x.summary.essentials)}).</p>
             <button className="btn btn-primary mt-16" onClick={() => setAdding(true)}>Add your first goal</button>
           </div>
-        ) : (
-          <div className="list">
-            {goals.map((g, i) => (
-              <div key={g.id} className="row" style={{ alignItems: 'stretch' }}>
-                <div className="stack-sm" style={{ justifyContent: 'center', gap: 2 }}>
-                  <button className="btn btn-ghost btn-icon btn-sm" disabled={i === 0} onClick={() => st.moveGoal(g.id, -1)} aria-label={`Raise priority of ${g.name}`}><ArrowUp size={15} /></button>
-                  <button className="btn btn-ghost btn-icon btn-sm" disabled={i === goals.length - 1} onClick={() => st.moveGoal(g.id, 1)} aria-label={`Lower priority of ${g.name}`}><ArrowDown size={15} /></button>
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}><GoalRow goal={g} a={x.goalAnalyses[g.id]} onClick={() => st.openGoal(g.id)} /></div>
+        </Card>
+      ) : (
+        <div className="stack" style={{ gap: 14 }}>
+          {goals.map((g, i) => (
+            <div key={g.id} className="row" style={{ alignItems: 'center', gap: 6 }}>
+              <div className="stack-sm" style={{ gap: 2 }}>
+                <button className="btn btn-ghost btn-icon btn-sm" style={{ width: 30 }} disabled={i === 0} onClick={() => st.moveGoal(g.id, -1)} aria-label={`Raise priority of ${g.name}`}><ArrowUp size={16} /></button>
+                <button className="btn btn-ghost btn-icon btn-sm" style={{ width: 30 }} disabled={i === goals.length - 1} onClick={() => st.moveGoal(g.id, 1)} aria-label={`Lower priority of ${g.name}`}><ArrowDown size={16} /></button>
               </div>
-            ))}
-          </div>
-        )}
-      </Card>
+              <div style={{ flex: 1, minWidth: 0 }}><GoalRow goal={g} a={x.goalAnalyses[g.id]} onClick={() => st.openGoal(g.id)} /></div>
+            </div>
+          ))}
+          <p className="tiny faint">Arrows set priority. Higher goals are funded first.</p>
+        </div>
+      )}
       {goals.length > 0 && <GoalTimeline />}
       <GoalForm open={adding} onClose={() => setAdding(false)} />
     </div>
@@ -108,9 +112,6 @@ function GoalTimeline() {
   );
 }
 
-function Stat({ label, value, sub, neg }: { label: string; value: string; sub?: string; neg?: boolean }) {
-  return <div className="card"><div className="metric-label">{label}</div><div className={`metric mt-8 ${neg ? 'neg' : ''}`}>{value}</div>{sub && <div className={`tiny mt-8 ${neg ? 'neg' : 'muted'}`}>{sub}</div>}</div>;
-}
 
 const CATEGORIES = Object.keys(GOAL_CATEGORY_LABEL) as GoalCategory[];
 
@@ -255,10 +256,10 @@ function GoalDetail({ goal }: { goal: FinancialGoal }) {
             <ResponsiveContainer>
               <AreaChart data={chart} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
                 <CartesianGrid vertical={false} stroke="var(--c-grid)" />
-                <XAxis dataKey="date" tick={{ fontSize: 12, fill: '#868c86' }} tickLine={false} axisLine={false} tickFormatter={(v) => fmtDate(v, { year: false }).split(' ')[0]} minTickGap={18} />
-                <YAxis tick={{ fontSize: 12, fill: '#868c86' }} tickLine={false} axisLine={false} tickFormatter={(v) => moneyShort(v * 100)} width={52} />
+                <XAxis dataKey="date" tick={{ fontSize: 12, fill: '#7c8697' }} tickLine={false} axisLine={false} tickFormatter={(v) => fmtDate(v, { year: false }).split(' ')[0]} minTickGap={18} />
+                <YAxis tick={{ fontSize: 12, fill: '#7c8697' }} tickLine={false} axisLine={false} tickFormatter={(v) => moneyShort(v * 100)} width={52} />
                 <Tooltip content={<ChartTooltip formatter={(v: number) => money(v * 100)} labelFormatter={(v: string) => fmtDate(v)} />} />
-                <ReferenceLine y={goal.targetAmount / 100} stroke="var(--primary)" strokeDasharray="4 4" label={{ value: 'Target', fontSize: 11, fill: '#1f5c3f', position: 'insideTopLeft' }} />
+                <ReferenceLine y={goal.targetAmount / 100} stroke="var(--primary)" strokeDasharray="4 4" label={{ value: 'Target', fontSize: 11, fill: '#c8ec8a', position: 'insideTopLeft' }} />
                 <Area dataKey="actual" name="Saved (history)" stroke="var(--c-savings)" fill="var(--c-savings)" fillOpacity={0.12} strokeWidth={2} connectNulls={false} />
                 <Area dataKey="projected" name="Projected" stroke="var(--c-savings)" strokeDasharray="5 4" fill="none" strokeWidth={2} connectNulls={false} />
               </AreaChart>

@@ -6,7 +6,7 @@ import { ChartTooltip } from './ui';
 import { fmtMonth } from '../lib/dates';
 import { money, moneyShort } from '../lib/money';
 
-const AXIS = { fontSize: 12, fill: '#868c86' };
+const AXIS = { fontSize: 12, fill: '#7c8697' };
 
 /** Stacked allocation of monthly take-home pay. Every segment is read from the plan summary. */
 export function AllocationBar({ s }: { s: PlanSummary }) {
@@ -67,13 +67,13 @@ export function ProjectionChart({ baseline, scenario, months, buffer, height = 3
             <XAxis dataKey="month" tick={AXIS} tickLine={false} axisLine={false} tickFormatter={(m) => fmtMonth(m, { short: true })} minTickGap={16} />
             <YAxis tick={AXIS} tickLine={false} axisLine={false} tickFormatter={(v) => moneyShort(v * 100)} width={56} />
             <Tooltip content={<ChartTooltip formatter={(v: number) => money(v * 100)} labelFormatter={(m: string) => `End of ${fmtMonth(m)}`} />} />
-            {buffer !== undefined && shown.includes('cash') && <ReferenceLine y={buffer / 100} stroke="#b9b6ab" strokeDasharray="2 4" label={{ value: 'Cash buffer', fontSize: 11, fill: '#868c86', position: 'insideTopLeft' }} />}
-            <ReferenceLine y={0} stroke="#cfccc2" />
+            {buffer !== undefined && shown.includes('cash') && <ReferenceLine y={buffer / 100} stroke="#55617a" strokeDasharray="2 4" label={{ value: 'Cash buffer', fontSize: 11, fill: '#7c8697', position: 'insideTopLeft' }} />}
+            <ReferenceLine y={0} stroke="#3c4a5f" />
             {shown.map((k) => (
-              <Area key={k} type="monotone" dataKey={k} name={`${SERIES[k].label}${scenario ? ' (current plan)' : ''}`} stroke={SERIES[k].color} strokeWidth={2} fill={SERIES[k].color} fillOpacity={0.06} dot={false} activeDot={{ r: 4, strokeWidth: 2, stroke: '#fff' }} isAnimationActive animationDuration={500} />
+              <Area key={k} type="monotone" dataKey={k} name={`${SERIES[k].label}${scenario ? ' (current plan)' : ''}`} stroke={SERIES[k].color} strokeWidth={2} fill={SERIES[k].color} fillOpacity={0.06} dot={false} activeDot={{ r: 4, strokeWidth: 2, stroke: '#1d2737' }} isAnimationActive animationDuration={500} />
             ))}
             {scenario && shown.map((k) => (
-              <Line key={`${k}_s`} type="monotone" dataKey={`${k}_s`} name={`${SERIES[k].label} (with scenario)`} stroke={SERIES[k].color} strokeWidth={2} strokeDasharray="6 4" dot={false} activeDot={{ r: 4, strokeWidth: 2, stroke: '#fff' }} isAnimationActive animationDuration={500} />
+              <Line key={`${k}_s`} type="monotone" dataKey={`${k}_s`} name={`${SERIES[k].label} (with scenario)`} stroke={SERIES[k].color} strokeWidth={2} strokeDasharray="6 4" dot={false} activeDot={{ r: 4, strokeWidth: 2, stroke: '#1d2737' }} isAnimationActive animationDuration={500} />
             ))}
           </ComposedChart>
         </ResponsiveContainer>

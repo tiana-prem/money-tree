@@ -173,7 +173,10 @@ export interface Product {
   category: ProductCategory;
   price: Cents;
   imageUrl: string;
+  /** Source of the image, kept for attribution in code; not shown in the UI. */
   imageCredit: string;
+  /** True for transparent product cut-outs, shown on a pastel backdrop instead of full-bleed. */
+  cutout?: boolean;
   description: string;
   sourceType: 'curated_demo' | 'custom';
   /** Id of a cheaper comparable product, if any. */

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ArrowRight, FileText, PencilLine, ShieldCheck, Sparkles } from 'lucide-react';
 import { useStore } from '../state/store';
-import { Logo, Modal, MoneyInput } from '../components/ui';
+import { Modal, MoneyInput, Wordmark } from '../components/ui';
 import { demoPaystub } from '../data/seed';
 import { todayISO } from '../lib/dates';
 import { money } from '../lib/money';
@@ -16,8 +16,8 @@ export function Onboarding() {
   return (
     <div className="onboard">
       <div className="onboard-inner">
-        <div className="row" style={{ marginBottom: 28 }}><Logo size={36} /><span style={{ fontSize: 24, fontWeight: 680, letterSpacing: '-0.02em' }}>Clover</span></div>
-        <h1 style={{ fontSize: 40, maxWidth: 720, lineHeight: 1.1 }}>Know what you can spend today, what it costs your future, and how to grow toward your goals.</h1>
+        <div style={{ marginBottom: 32 }}><Wordmark /></div>
+        <h1 className="hero-title" style={{ maxWidth: 760 }}>Know what you can spend.<br /><span className="accent">Grow what you save.</span></h1>
         <p className="muted" style={{ fontSize: 17, marginTop: 14, maxWidth: 640 }}>
           Built for your first full-time job: take-home pay, 401(k) matching, student loans, rent, an emergency fund and the big purchases in between.
         </p>

@@ -32,7 +32,6 @@ export function Leaderboard() {
           ? `You're in first. Keep the streak going to stay there.`
           : `${gap.toLocaleString()} ${sort === 'earned' ? 'points' : `week${gap === 1 ? '' : 's'}`} behind ${ahead.name}. One more good week could close the gap.`}
       </p>
-      <p className="tiny faint mt-8">Demo friends are simulated. Adding real friends needs accounts, which this version doesn't have yet.</p>
     </Card>
   );
 }

@@ -3,8 +3,8 @@ import type { FinancialGoal, GoalCategory } from '../engine/types';
 import type { SafeToSpend } from '../engine/plan';
 import type { GoalAnalysis } from '../engine/goals';
 import { TRACK_LABEL } from '../engine/goals';
-import { KV, MathToggle, Progress } from './ui';
-import { fmtDate } from '../lib/dates';
+import { KV, MathToggle } from './ui';
+import { fmtDate, fmtMonth } from '../lib/dates';
 import { money } from '../lib/money';
 
 export const GOAL_ICON: Record<GoalCategory, typeof Car> = {
@@ -19,24 +19,35 @@ export function trackBadge(a: GoalAnalysis) {
   return <span className={`badge ${tone}`}>{TRACK_LABEL[a.track]}</span>;
 }
 
+/** Pastel color per goal category: icon tile, percent and progress bar. */
+export const GOAL_COLOR: Record<GoalCategory, string> = {
+  emergency: 'var(--mint)', car: 'var(--peach)', housing: 'var(--sky)', education: 'var(--sun)', travel: 'var(--lavender)', retirement: 'var(--mint)', custom: 'var(--lavender)',
+};
+
 export function GoalRow({ goal, a, onClick }: { goal: FinancialGoal; a: GoalAnalysis; onClick?: () => void }) {
   const Icon = GOAL_ICON[goal.category];
+  const color = GOAL_COLOR[goal.category];
+  const status = a.track === 'complete' ? 'complete' : a.track === 'on_track' ? 'on track' : a.track === 'behind' ? 'behind' : a.track === 'overdue' ? 'date passed' : a.track === 'paused' ? 'paused' : a.track === 'no_contribution' ? 'needs a contribution' : '';
+  const when = a.track === 'complete' ? '' : a.projectedCompletionDate ? fmtMonth(a.projectedCompletionDate) : 'No date yet';
+  const statusColor = a.track === 'behind' || a.track === 'no_contribution' ? 'var(--warning)' : a.track === 'overdue' ? 'var(--negative)' : 'var(--mint)';
   return (
-    <div className="list-item" style={{ cursor: onClick ? 'pointer' : undefined }} onClick={onClick} role={onClick ? 'button' : undefined} aria-label={onClick ? `Open ${goal.name}` : undefined} tabIndex={onClick ? 0 : undefined}
-      onKeyDown={(e) => { if (onClick && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onClick(); } }}>
-      <div className="icon-chip green"><Icon size={18} /></div>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div className="row-between">
-          <span className="strong">{goal.name}</span>
-          <span className="small num"><strong>{money(goal.currentSavedAmount)}</strong> <span className="faint">/ {money(goal.targetAmount)}</span></span>
+    <button type="button" className="goal-card" onClick={onClick} disabled={!onClick} aria-label={`Open ${goal.name}`}>
+      <div className="goal-top">
+        <div className="icon-chip lg" style={{ background: color, color: 'var(--ink)' }}><Icon size={24} /></div>
+        <div style={{ minWidth: 0 }}>
+          <div className="goal-name">{goal.name}</div>
+          <div className="goal-sub">{money(goal.currentSavedAmount)} of {money(goal.targetAmount)}</div>
         </div>
-        <div className="mt-8"><Progress value={a.percent} label={`${goal.name} progress`} /></div>
-        <div className="row-between mt-8 small">
-          <span className="muted">{a.track === 'complete' ? 'Complete' : `${money(a.remaining)} to go · est. ${a.projectedCompletionDate ? fmtDate(a.projectedCompletionDate) : 'no date yet'}`}</span>
-          {trackBadge(a)}
-        </div>
+        <div className="goal-pct" style={{ color }}>{Math.round(a.percent * 100)}%</div>
       </div>
-    </div>
+      <div className="progress" role="progressbar" aria-label={`${goal.name} progress`} aria-valuenow={Math.round(a.percent * 100)} aria-valuemin={0} aria-valuemax={100}>
+        <span style={{ width: `${Math.min(1, a.percent) * 100}%`, background: color }} />
+      </div>
+      <div className="goal-foot">
+        <span>{a.monthlyContribution > 0 ? `${money(a.monthlyContribution)} / month` : 'No monthly amount'}</span>
+        <span style={{ color: statusColor }}>{[when, status].filter(Boolean).join(' · ')}</span>
+      </div>
+    </button>
   );
 }
 

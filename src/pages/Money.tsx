@@ -4,6 +4,7 @@ import { useStore } from '../state/store';
 import { useData, useDerived } from '../state/hooks';
 import { Card, MathToggle, MoneyInput, Switch } from '../components/ui';
 import { AllocationBar } from '../components/charts';
+import { SessionControls } from '../components/SessionControls';
 import { FREQUENCY_LABEL, PAYCHECKS_PER_YEAR, annualize, toMonthly } from '../engine/income';
 import type { BudgetLine, PayFrequency } from '../engine/types';
 import { fmtDate } from '../lib/dates';
@@ -111,6 +112,9 @@ export function MoneyPage() {
           ))}
         </Card>
       </div>
+      <Card className="mt-16" title="Demo session" subtitle="Restore the sample data or start a different way.">
+        <SessionControls layout="row" />
+      </Card>
     </div>
   );
 }

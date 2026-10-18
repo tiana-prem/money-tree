@@ -7,11 +7,11 @@ const ICONS: Record<ProductCategory, typeof Car> = {
 };
 
 /** Product photo with a loading shimmer and a graceful illustrated fallback if the image fails. */
-export function ProductImage({ src, alt, category }: { src?: string; alt: string; category: ProductCategory }) {
+export function ProductImage({ src, alt, category, cutout }: { src?: string; alt: string; category: ProductCategory; cutout?: boolean }) {
   const [state, setState] = useState<'loading' | 'ok' | 'error'>(src ? 'loading' : 'error');
   const Icon = ICONS[category] ?? Package;
   return (
-    <div className="product-img">
+    <div className={`product-img p-bg-${category} ${cutout ? 'cutout' : ''}`}>
       {state === 'loading' && <div className="skeleton" aria-hidden />}
       {src && state !== 'error' && (
         <img src={src} alt={alt} loading="lazy" referrerPolicy="no-referrer" style={{ opacity: state === 'ok' ? 1 : 0 }} onLoad={() => setState('ok')} onError={() => setState('error')} />

@@ -8,7 +8,7 @@ import { describeDays, diffDays, fmtDate, fmtMonth } from '../lib/dates';
 import { money } from '../lib/money';
 
 /** Validated categorical order (see dataviz palette check) — options keep their color as the list changes. */
-const OPTION_COLORS = ['#2a78d6', '#eb6834', '#1baf7a', '#e87ba4'];
+const OPTION_COLORS = ['#3987e5', '#d95926', '#199e70', '#9085e9'];
 
 type Better = 'lower' | 'higher';
 interface Row { label: string; values: number[]; fmt: (v: number, i: number) => string; better: Better; note?: string }
@@ -119,8 +119,8 @@ export function CompareOptions({ options, goals, horizon, onChoose, onRemove }: 
             <ResponsiveContainer>
               <BarChart data={chartData} layout="vertical" margin={{ top: 4, right: 16, left: 8, bottom: 0 }} barGap={2} barCategoryGap="22%">
                 <CartesianGrid horizontal={false} stroke="var(--c-grid)" />
-                <XAxis type="number" tick={{ fontSize: 12, fill: '#868c86' }} tickLine={false} axisLine={false} unit=" d" allowDecimals={false} />
-                <YAxis type="category" dataKey="goal" tick={{ fontSize: 12, fill: '#565d58' }} tickLine={false} axisLine={false} width={130} />
+                <XAxis type="number" tick={{ fontSize: 12, fill: '#7c8697' }} tickLine={false} axisLine={false} unit=" d" allowDecimals={false} />
+                <YAxis type="category" dataKey="goal" tick={{ fontSize: 12, fill: '#aab2be' }} tickLine={false} axisLine={false} width={130} />
                 <Tooltip cursor={{ fill: 'rgba(0,0,0,0.04)' }} content={<ChartTooltip formatter={(v: number) => (v === 0 ? 'No delay' : `${v} days later`)} />} />
                 <Legend iconType="square" iconSize={10} wrapperStyle={{ fontSize: 12 }} />
                 {shown.map((o, i) => <Bar key={o.item.id} dataKey={o.item.id} name={o.item.customName} fill={color(i)} radius={[0, 4, 4, 0]} />)}

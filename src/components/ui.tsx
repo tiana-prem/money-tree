@@ -3,20 +3,19 @@ import { Calculator, CheckCircle2, ChevronDown, ChevronUp, Info, X } from 'lucid
 import { useStore } from '../state/store';
 import { parseDollars, toDollars } from '../lib/money';
 
-export function Logo({ size = 30 }: { size?: number }) {
-  // Four-leaf mark built from rounded leaves.
+export function Logo({ size = 34 }: { size?: number }) {
+  // Lime tile with a leaf drawn in outline.
   return (
-    <svg className="brand-mark" width={size} height={size} viewBox="0 0 32 32" aria-hidden="true">
-      <rect width="32" height="32" rx="9" fill="#1f5c3f" />
-      <g fill="#e5efe8">
-        <path d="M16 15.2c-1.6-3.9-6.6-4-6.9-.6-.3 3 3.6 3.7 6.9.6Z" />
-        <path d="M16.8 16c3.9-1.6 4-6.6.6-6.9-3-.3-3.7 3.6-.6 6.9Z" />
-        <path d="M16 16.8c1.6 3.9 6.6 4 6.9.6.3-3-3.6-3.7-6.9-.6Z" />
-        <path d="M15.2 16c-3.9 1.6-4 6.6-.6 6.9 3 .3 3.7-3.6.6-6.9Z" />
-      </g>
-      <path d="M16 16.5c.8 3 2.2 5.4 4.4 7.3" stroke="#8fb59a" strokeWidth="1.4" fill="none" strokeLinecap="round" />
+    <svg className="brand-mark" width={size} height={size} viewBox="0 0 40 40" aria-hidden="true">
+      <rect width="40" height="40" rx="12" fill="#c8ec8a" transform="rotate(-6 20 20)" />
+      <path d="M12.5 27.5c0-9 6.5-15 15-15 0 8.5-6 15-15 15Z" fill="none" stroke="#18210f" strokeWidth="2.4" strokeLinejoin="round" />
+      <path d="M12.5 27.5 22 18" stroke="#18210f" strokeWidth="2.4" strokeLinecap="round" />
     </svg>
   );
+}
+
+export function Wordmark() {
+  return <span className="brand"><Logo /><span>clover<span className="dot">.</span></span></span>;
 }
 
 export function Card({ title, subtitle, action, children, className = '', id }: { title?: ReactNode; subtitle?: ReactNode; action?: ReactNode; children: ReactNode; className?: string; id?: string }) {
@@ -180,9 +179,9 @@ export function Toasts() {
     <div className="toasts" aria-live="polite">
       {toasts.map((t) => (
         <div className="toast" key={t.id} role="status">
-          <CheckCircle2 size={17} color={t.tone === 'error' ? '#f3a4a4' : '#9fd3b0'} />
+          <CheckCircle2 size={17} color={t.tone === 'error' ? '#c2410c' : '#2f7a4f'} />
           <span style={{ flex: 1 }}>{t.message}</span>
-          <button className="btn btn-icon btn-sm" style={{ color: 'white', background: 'transparent' }} onClick={() => dismiss(t.id)} aria-label="Dismiss"><X size={15} /></button>
+          <button className="btn btn-icon btn-sm" style={{ color: 'inherit', background: 'transparent' }} onClick={() => dismiss(t.id)} aria-label="Dismiss"><X size={15} /></button>
         </div>
       ))}
     </div>

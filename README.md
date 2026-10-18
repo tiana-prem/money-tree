@@ -2,7 +2,7 @@
 
 Financial planning for your first full-time job. Clover helps recent graduates know what they can spend today, understand what a purchase costs their future, and grow toward their goals — with a virtual garden that rewards consistent weeks.
 
-Built for the Hack like W@CC hackathon. React + Vite + TypeScript, no backend, no API keys. Runs fully offline with seeded demo data (product photos load from Wikimedia Commons, with an illustrated fallback if offline).
+Built for the Hack like W@CC hackathon. React + Vite + TypeScript, no backend, no API keys. Runs fully offline with seeded demo data (product images load from the DummyJSON CDN and Wikimedia Commons, with an illustrated fallback if offline).
 
 ## Run it
 
