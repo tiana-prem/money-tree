@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "clover",
+      "runtimeExecutable": "/Users/sahithichunduri/.nvm/versions/node/v22.23.3/bin/npx",
+      "runtimeArgs": ["vite", "--port", "5173", "--strictPort"],
+      "port": 5173
+    }
+  ]
+}
