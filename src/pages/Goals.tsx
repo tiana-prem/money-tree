@@ -41,7 +41,7 @@ export function GoalsPage() {
       {x.summary.overAllocated && (
         <div style={{ marginBottom: 16 }}>
           <Callout tone="warn">
-            <strong>Your goals ask for {money(x.summary.plannedSavings)}/month, but your plan can fund {money(Math.max(0, x.summary.savingsCapacity))}.</strong> Clover funds the highest priorities first:{' '}
+            <strong>Your goals ask for {money(x.summary.plannedSavings)}/month, but your plan can fund {money(Math.max(0, x.summary.savingsCapacity))}.</strong> MoneyTree funds the highest priorities first:{' '}
             {x.allocation.filter((a) => a.shortfall > 0).map((a) => `${d.goals.find((g) => g.id === a.goalId)?.name} gets ${money(a.funded)} of ${money(a.requested)}`).join('; ')}. Reorder priorities, lower a contribution, or extend a target date.
           </Callout>
         </div>
@@ -155,7 +155,7 @@ export function GoalForm({ open, onClose, goal }: { open: boolean; onClose: () =
   };
 
   return (
-    <Modal open={open} onClose={onClose} wide title={goal ? 'Edit goal' : 'Add a goal'} subtitle="Clover calculates what it takes and whether your plan can fund it."
+    <Modal open={open} onClose={onClose} wide title={goal ? 'Edit goal' : 'Add a goal'} subtitle="MoneyTree calculates what it takes and whether your plan can fund it."
       footer={<><button className="btn btn-secondary" onClick={onClose}>Cancel</button><button className="btn btn-primary" onClick={save} disabled={touched && !ok}>{goal ? 'Save changes' : 'Create goal'}</button></>}>
       <div className="form-grid">
         <div className="field"><label htmlFor="g-name">Goal name</label><input id="g-name" className="input" value={f.name} maxLength={50} onChange={(e) => set('name', e.target.value)} aria-invalid={touched && !!errors.name} placeholder="e.g. Car down payment" />{touched && errors.name && <span className="error">{errors.name}</span>}</div>

@@ -76,7 +76,7 @@ export function buildRecommendations(d: AppData, x: Derived): Recommendation[] {
       formula: [
         'Match % = Σ over tiers of min(contribution left, tier width) × tier match rate',
         `Missed match = (${m.maxMatch}% − ${m.matchPercentNow}%) × annual gross = ${money(m.missedAnnual)}`,
-        'Take-home falls by at most the extra contribution (less after the pre-tax benefit). Clover conservatively reduces net pay by the full amount if you accept.',
+        'Take-home falls by at most the extra contribution (less after the pre-tax benefit). MoneyTree conservatively reduces net pay by the full amount if you accept.',
         '401(k) money is retirement savings with withdrawal restrictions and possible taxes or penalties; it is not spendable cash.',
       ],
     });
@@ -123,7 +123,7 @@ export function buildRecommendations(d: AppData, x: Derived): Recommendation[] {
       id: 'over-allocation', category: 'goals', weight: 95,
       title: 'Your goals ask for more than your plan can fund',
       issue: `Goal contributions total ${money(x.summary.plannedSavings)}/month, but only ${money(Math.max(0, x.summary.savingsCapacity))} is available after essentials, discretionary spending and debt payments.`,
-      reasoning: 'Clover funds goals in priority order. Lower-priority goals will receive less than requested.',
+      reasoning: 'MoneyTree funds goals in priority order. Lower-priority goals will receive less than requested.',
       impact: `${money(-x.summary.unallocated)}/month over-allocated`,
       impactValue: -x.summary.unallocated, affectedGoalIds: short.map((s) => s.goalId),
       actionLabel: 'Review goal priorities', action: { kind: 'navigate', tab: 'goals' },

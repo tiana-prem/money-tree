@@ -15,7 +15,7 @@ export function Logo({ size = 34 }: { size?: number }) {
 }
 
 export function Wordmark() {
-  return <span className="brand"><Logo /><span>clover<span className="dot">.</span></span></span>;
+  return <span className="brand"><Logo /><span>MoneyTree</span></span>;
 }
 
 export function Card({ title, subtitle, action, children, className = '', id }: { title?: ReactNode; subtitle?: ReactNode; action?: ReactNode; children: ReactNode; className?: string; id?: string }) {

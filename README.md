@@ -1,8 +1,8 @@
-# Clover
+# MoneyTree
 
-Financial planning for your first full-time job. Clover helps recent graduates know what they can spend today, understand what a purchase costs their future, and grow toward their goals — with a virtual garden that rewards consistent weeks.
+Financial planning for your first full-time job. MoneyTree helps recent graduates know what they can spend today, understand what a purchase costs their future, and grow toward their goals — with a virtual garden that rewards consistent weeks.
 
-Built for the Hack like W@CC hackathon. React + Vite + TypeScript, no backend, no API keys. Runs fully offline with seeded demo data (product images load from the DummyJSON CDN and Wikimedia Commons, with an illustrated fallback if offline).
+Built for the Hack like W@CC hackathon. React + Vite + TypeScript, no backend or browser API key. Core planning runs offline with seeded demo data (product images load from the DummyJSON CDN and Wikimedia Commons, with an illustrated fallback if offline).
 
 ## Run it
 
@@ -52,7 +52,7 @@ src/
 - **Goal delay** = scenario completion date − baseline completion date, from two runs of the same engine. "Not reached within the projection" is shown instead of inventing a date.
 - **Simulations never touch balances or transactions.** Applying a scenario adds planned spending to the plan, after confirmation.
 - **Garden points** are granted once per ISO week id, so reloads can't duplicate rewards. A week qualifies when discretionary spending ≤ (monthly budget × 12 ÷ 52) and every essential bill due that week is paid.
-- **AI layer:** none configured. Explanations come from deterministic templates that read engine outputs. Personalization is a simple preference rule (repeatedly dismissed categories rank lower), not a learning model.
+- **AI layer:** Sprout connects to the configured ElevenLabs agent for voice and text chat. Explanations come from deterministic templates that read engine outputs. Personalization is a simple preference rule (repeatedly dismissed categories rank lower), not a learning model.
 
 ## Demo walkthrough
 
@@ -67,4 +67,13 @@ src/
 
 Demo friends on the leaderboard are simulated; real friends would need accounts and a server.
 
-All data is simulated. Clover is an educational planning tool, not financial, tax or investment advice.
+All data is simulated. MoneyTree is an educational planning tool, not financial, tax or investment advice.
+
+
+## Sprout integration
+
+The circular lower-right launcher opens Sprout, connected to the existing ElevenLabs agent `agent_1801m57nwz02e65b9pv8k7br5re2`. The agent system prompt and `money_tree` client tool remain managed in ElevenLabs. Integration follows https://elevenlabs.io/docs/eleven-agents/libraries/react. No API secret is included.
+
+Comparisons use the local projection engine. Proposed edits require an explicit Approve change click within 25 seconds (the agent tool has a 30-second response timeout). Cancel, timeout, disconnect, or closing Sprout prevents a pending edit. Changes include Undo, which refuses to overwrite later manual edits. Simulated purchases remain drafts until Apply to my plan.
+
+Voice requires browser microphone permission. Text chat, live purchase comparison, approval, draft simulation, and Undo were verified in Chrome; voice audio was not exercised. Build and all 49 tests pass. The existing dependency set reports npm audit findings and the build reports large/circular chunks; review these before production deployment.

@@ -39,7 +39,7 @@ export function MoneyPage() {
             : <div className="formula">{`Monthly take-home = your estimate = ${money(inc.monthlyEstimate)}`}</div>}
           <div className="formula">{`Left for goals = take-home − essentials − fun money − debt − recurring
             = ${money(x.summary.monthlyNet)} − ${money(x.summary.essentials)} − ${money(x.summary.discretionary)} − ${money(x.summary.debtPayments)} − ${money(x.summary.recurringCommitments)} = ${money(x.summary.savingsCapacity)}`}</div>
-          <p className="muted">Each month, any cash above your safety cushion goes to your goals in priority order. If a month runs short, Clover pauses your lowest-priority goal first so your cushion stays intact.</p>
+          <p className="muted">Each month, any cash above your safety cushion goes to your goals in priority order. If a month runs short, MoneyTree pauses your lowest-priority goal first so your cushion stays intact.</p>
         </MathToggle>
       </Card>
 

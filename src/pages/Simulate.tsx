@@ -69,7 +69,7 @@ export function SimulatePage() {
               <h4>Which goals</h4><p>{explanation.affected}</p>
               <h4>Method</h4><p>{explanation.how}</p>
               <h4>Your options</h4><ul style={{ margin: 0, paddingLeft: 18 }}>{explanation.options.map((o) => <li key={o}>{o}</li>)}</ul>
-              <p className="tiny faint mt-12">Generated from the projection engine's outputs by Clover's built-in explanation templates. Estimates, not guarantees or financial advice.</p>
+              <p className="tiny faint mt-12">Generated from the projection engine's outputs by MoneyTree's built-in explanation templates. Estimates, not guarantees or financial advice.</p>
             </MathToggle>
           </Card>
 
@@ -289,7 +289,7 @@ function Compare({ cmp }: { cmp: ScenarioComparison }) {
         ))}
       </div>
       <div className="small muted mt-12">Total scenario outflow within {h} months: <strong className="num">{money(cmp.totalCostInHorizon)}</strong>{cmp.monthlyRecurringCost ? ` · ongoing ${money(cmp.monthlyRecurringCost)}/mo` : ''}</div>
-      {cmp.safeAfter.safeToSpend < 0 && <Callout tone="warn" icon={<AlertTriangle size={17} />}>This exceeds what's safe to spend this month. {cmp.scenario.snapshots[0] && Object.values(cmp.scenario.snapshots[Math.max(0, cmp.firstEventPeriod)].pausedContributions).some((v) => v > 0) ? 'Clover pauses lower-priority goal contributions to keep your cash buffer intact.' : 'The difference comes from cash that would otherwise go to goals.'}</Callout>}
+      {cmp.safeAfter.safeToSpend < 0 && <Callout tone="warn" icon={<AlertTriangle size={17} />}>This exceeds what's safe to spend this month. {cmp.scenario.snapshots[0] && Object.values(cmp.scenario.snapshots[Math.max(0, cmp.firstEventPeriod)].pausedContributions).some((v) => v > 0) ? 'MoneyTree pauses lower-priority goal contributions to keep your cash buffer intact.' : 'The difference comes from cash that would otherwise go to goals.'}</Callout>}
       {cmp.newShortfallPeriods.length > 0 && <Callout tone="neg" icon={<AlertTriangle size={17} />}>Projected shortfall: checking goes negative in {fmtMonth(cmp.scenario.snapshots[cmp.newShortfallPeriods[0]].monthKey)} by {money(cmp.scenario.snapshots[cmp.newShortfallPeriods[0]].cashFlowShortfall)}.</Callout>}
     </div>
   );

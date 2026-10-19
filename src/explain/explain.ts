@@ -49,7 +49,7 @@ export function explainPurchase(cmp: ScenarioComparison, items: PurchaseScenario
     'Exclude the item to see your plan without it.',
     'Apply it to your plan only if you decide to buy it.',
   ];
-  const how = `Clover ran the same month-by-month projection twice — once with your current plan and once with ${included.length === 1 ? 'this purchase' : 'these purchases'} added on ${included.length === 1 ? fmtDate(included[0].plannedDate) : 'their planned dates'} — and compared the dates each goal reaches its target.${goals.length ? '' : ' Add a goal to see goal-level impact.'}`;
+  const how = `MoneyTree ran the same month-by-month projection twice — once with your current plan and once with ${included.length === 1 ? 'this purchase' : 'these purchases'} added on ${included.length === 1 ? fmtDate(included[0].plannedDate) : 'their planned dates'} — and compared the dates each goal reaches its target.${goals.length ? '' : ' Add a goal to see goal-level impact.'}`;
   return { headline, whatChanged, whyItMatters, affected, options, how };
 }
 

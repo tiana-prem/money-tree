@@ -218,7 +218,7 @@ Each week is scored once (by week id), so reloads can't add points.`}</div>
           const sub = r.type === 'weekly_reward'
             ? `${r.streakAfter}-week streak · ${r.basePoints} + ${r.streakBonus} bonus`
             : r.type === 'missed_week' ? `Didn't qualify: ${r.note.charAt(0).toLowerCase()}${r.note.slice(1)}`
-              : r.type === 'purchase' ? `Garden shop · ${fmtDate(r.date, { year: false })}` : 'Clover patch, gravel path and spring theme';
+              : r.type === 'purchase' ? `Garden shop · ${fmtDate(r.date, { year: false })}` : 'MoneyTree patch, gravel path and spring theme';
           return (
             <li key={r.id}>
               {r.type === 'weekly_reward' ? <Check size={20} color="var(--mint)" /> : r.type === 'missed_week' ? <X size={20} color="var(--text-3)" /> : r.type === 'purchase' ? <ShoppingBag size={18} color="var(--peach)" /> : <Sprout size={20} color="var(--mint)" />}

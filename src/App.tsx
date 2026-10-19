@@ -1,3 +1,4 @@
+import Sprout from './sprout/Sprout';
 import { useEffect } from 'react';
 import { Home as HomeIcon, Leaf, ShoppingBag, Target, Wallet } from 'lucide-react';
 import { useStore } from './state/store';
@@ -69,6 +70,7 @@ export default function App() {
           </button>
         ))}
       </nav>
+      <Sprout />
       <Toasts />
     </div>
   );

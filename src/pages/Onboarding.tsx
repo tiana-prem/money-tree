@@ -44,7 +44,7 @@ export function Onboarding() {
         </div>
 
         <div className="row mt-24 small muted" style={{ marginTop: 28 }}>
-          <ShieldCheck size={16} /> Demo connections are simulated. Clover never asks for bank or payroll credentials, and projections are educational estimates, not financial advice.
+          <ShieldCheck size={16} /> Demo connections are simulated. MoneyTree never asks for bank or payroll credentials, and projections are educational estimates, not financial advice.
         </div>
       </div>
       <ManualSetup open={manual} onClose={() => setManual(false)} />
